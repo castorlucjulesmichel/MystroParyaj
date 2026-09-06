@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111827">
+  <title>MystroParyaj</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <button id="menuBtn" class="icon-btn" aria-label="Menu">☰</button>
+    <div class="brand">
+      <span class="brand-mark">MP</span>
+      <div><strong>MystroParyaj</strong><small data-i18n="tagline">Paris sportifs & portefeuille</small></div>
+    </div>
+    <div class="top-actions">
+      <select id="languageSelect" aria-label="Langue">
+        <option value="fr">FR</option><option value="ht">KR</option>
+        <option value="en">EN</option><option value="es">ES</option>
+      </select>
+      <select id="currencySelect" aria-label="Devise">
+        <option>HTG</option><option>USD</option><option>EUR</option><option>CAD</option><option>DOP</option>
+      </select>
+      <button id="loginBtn" class="primary small" data-i18n="login">Connexion</button>
+    </div>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <nav>
+      <button data-page="home" class="nav-link active">🏠 <span data-i18n="home">Accueil</span></button>
+      <button data-page="sports" class="nav-link">⚽ <span data-i18n="sports">Sports</span></button>
+      <button data-page="betslip" class="nav-link">🎟️ <span data-i18n="betslip">Ticket</span></button>
+      <button data-page="wallet" class="nav-link">💳 <span data-i18n="wallet">Portefeuille</span></button>
+      <button data-page="exchange" class="nav-link">💱 <span data-i18n="exchange">Change</span></button>
+      <button data-page="history" class="nav-link">🧾 <span data-i18n="history">Historique</span></button>
+      <button data-page="profile" class="nav-link">👤 <span data-i18n="profile">Profil</span></button>
+      <button data-page="admin" class="nav-link admin-only">📊 <span data-i18n="admin">Administration</span></button>
+    </nav>
+    <div class="responsible-box">
+      <strong>18+</strong>
+      <span data-i18n="responsible">Jouez de façon responsable.</span>
+      <button id="limitsBtn" class="ghost small" data-i18n="limits">Mes limites</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section id="page-home" class="page active">
+      <div class="hero">
+        <div>
+          <span class="pill" data-i18n="livePlatform">Plateforme de démonstration</span>
+          <h1 data-i18n="heroTitle">Pariez simplement. Suivez tout clairement.</h1>
+          <p data-i18n="heroText">15 catégories, portefeuille multi-devises, MonCash, NatCash et statistiques.</p>
+          <div class="hero-actions">
+            <button class="primary" data-go="sports" data-i18n="startBet">Voir les paris</button>
+            <button class="secondary" data-go="wallet" data-i18n="manageWallet">Gérer le portefeuille</button>
+          </div>
+        </div>
+        <div class="hero-card">
+          <span data-i18n="securePlatform">Plateforme sécurisée</span>
+          <strong>MystroParyaj</strong>
+          <small data-i18n="securePlatformText">Paris, portefeuille et paiements réunis dans une seule application.</small>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <article class="stat"><span data-i18n="balance">Solde</span><strong id="balanceValue">0 HTG</strong><small data-i18n="available">Disponible</small></article>
+        <article class="stat"><span data-i18n="openBets">Paris ouverts</span><strong id="openBetsValue">0</strong><small data-i18n="activeTickets">Tickets actifs</small></article>
+        <article class="stat"><span data-i18n="todayBets">Paris du jour</span><strong id="todayBetsValue">0</strong><small data-i18n="activity">Activité</small></article>
+        <article class="stat"><span data-i18n="transactions">Transactions</span><strong id="transactionCountValue">0</strong><small data-i18n="history">Historique</small></article>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2 data-i18n="featured">Événements en vedette</h2><button data-go="sports" class="text-btn" data-i18n="seeAll">Tout voir</button></div>
+        <div id="featuredEvents" class="event-list"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h2 data-i18n="weeklyActivity">Activité hebdomadaire</h2></div>
+        <div id="barChart" class="bar-chart"></div>
+      </div>
+    </section>
+
+    <section id="page-sports" class="page">
+      <div class="page-title"><div><h1 data-i18n="sports">Sports</h1><p data-i18n="chooseEvent">Choisissez une catégorie puis un pari.</p></div></div>
+      <div id="categoryGrid" class="category-grid"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2 id="sportTitle" data-i18n="allEvents">Tous les événements</h2>
+          <input id="eventSearch" data-i18n-placeholder="searchEvent" placeholder="Rechercher un événement">
+        </div>
+        <div id="eventsList" class="event-list"></div>
+      </div>
+    </section>
+
+    <section id="page-betslip" class="page">
+      <div class="page-title"><div><h1 data-i18n="betslip">Ticket</h1><p data-i18n="betslipHelp">Vérifiez vos sélections avant validation.</p></div></div>
+      <div class="grid-2">
+        <div class="panel"><div id="betSelections"></div></div>
+        <div class="panel sticky-card">
+          <label data-i18n="stake">Mise</label>
+          <div class="money-input"><input id="stakeInput" type="number" min="10" step="10" value="100"><span id="stakeCurrency">HTG</span></div>
+          <div class="calc-row"><span data-i18n="totalOdds">Cote totale</span><strong id="totalOdds">1.00</strong></div>
+          <div class="calc-row"><span data-i18n="potentialReturn">Retour potentiel</span><strong id="potentialReturn">0 HTG</strong></div>
+          <button id="placeBetBtn" class="primary full" data-i18n="placeBet">Valider le pari</button>
+          <small class="legal" data-i18n="demoWarning">Mode démo tant que les paiements et licences réels ne sont pas activés.</small>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-wallet" class="page">
+      <div class="page-title"><div><h1 data-i18n="wallet">Portefeuille</h1><p data-i18n="walletText">Dépôts, retraits et soldes.</p></div></div>
+      <div class="wallet-card">
+        <span data-i18n="availableBalance">Solde disponible</span><strong id="walletBalance">0 HTG</strong>
+        <div class="wallet-actions">
+          <button id="depositTabBtn" class="primary" data-i18n="deposit">Dépôt</button>
+          <button id="withdrawTabBtn" class="secondary" data-i18n="withdraw">Retrait</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <h2 data-i18n="paymentMethod">Méthode de paiement</h2>
+          <div class="payment-methods">
+            <button class="payment active" data-provider="moncash"><span>MC</span><strong>MonCash</strong><small data-i18n="mobileMoney">Mobile Money</small></button>
+            <button class="payment" data-provider="natcash"><span>NC</span><strong>NatCash</strong><small data-i18n="mobileMoney">Mobile Money</small></button>
+          </div>
+        </div>
+        <div class="panel">
+          <h2 id="paymentFormTitle" data-i18n="deposit">Dépôt</h2>
+          <label data-i18n="phone">Numéro de téléphone</label>
+          <input id="paymentPhone" type="tel" data-i18n-placeholder="phonePlaceholder" placeholder="+509 XX XX XX XX">
+          <label data-i18n="amount">Montant</label>
+          <div class="money-input"><input id="paymentAmount" type="number" min="10"><span id="paymentCurrency">HTG</span></div>
+          <button id="paymentSubmit" class="primary full" data-i18n="continue">Continuer</button>
+          <div id="paymentStatus" class="status"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-exchange" class="page">
+      <div class="page-title"><div><h1 data-i18n="exchange">Change</h1><p data-i18n="exchangeText">Convertissez entre les devises disponibles.</p></div></div>
+      <div class="panel exchange-card">
+        <div>
+          <label data-i18n="from">De</label>
+          <div class="money-input"><input id="exchangeAmount" type="number" value="100"><select id="fromCurrency"><option>HTG</option><option>USD</option><option>EUR</option><option>CAD</option><option>DOP</option></select></div>
+        </div>
+        <button id="swapCurrencies" class="swap">⇄</button>
+        <div>
+          <label data-i18n="to">Vers</label>
+          <div class="money-input"><input id="exchangeResult" readonly><select id="toCurrency"><option>USD</option><option>HTG</option><option>EUR</option><option>CAD</option><option>DOP</option></select></div>
+        </div>
+        <button id="exchangeBtn" class="primary" data-i18n="convert">Convertir</button>
+        <small data-i18n="rateNotice">Les taux affichés en démo sont indicatifs. En production, utilisez une source de taux autorisée.</small>
+      </div>
+    </section>
+
+    <section id="page-history" class="page">
+      <div class="page-title"><div><h1 data-i18n="history">Historique</h1><p data-i18n="historyText">Vos paris et mouvements de portefeuille.</p></div></div>
+      <div class="panel table-wrap"><table><thead><tr><th data-i18n="date">Date</th><th data-i18n="type">Type</th><th data-i18n="details">Détails</th><th data-i18n="amount">Montant</th><th data-i18n="status">Statut</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+    </section>
+
+    <section id="page-profile" class="page">
+      <div class="page-title"><div><h1 data-i18n="profile">Profil</h1><p data-i18n="profileText">Compte, sécurité et jeu responsable.</p></div></div>
+      <div class="grid-2">
+        <div class="panel">
+          <label data-i18n="phone">Numéro de téléphone</label><input id="profilePhone" readonly>
+          <label data-i18n="language">Langue</label><input id="profileLanguage" readonly>
+          <label data-i18n="mainCurrency">Devise principale</label><input id="profileCurrency" readonly>
+        </div>
+        <div class="panel">
+          <h2 data-i18n="responsibleGaming">Jeu responsable</h2>
+          <label data-i18n="dailyDepositLimit">Limite dépôt/jour</label><input id="depositLimit" type="number" value="5000">
+          <label data-i18n="dailyBetLimit">Limite mises/jour</label><input id="betLimit" type="number" value="3000">
+          <button id="saveLimitsBtn" class="primary" data-i18n="save">Enregistrer</button>
+          <button id="selfExcludeBtn" class="danger" data-i18n="selfExclude">Auto-exclusion</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-admin" class="page">
+      <div class="page-title"><div><h1 data-i18n="admin">Administration</h1><p data-i18n="adminText">Vue de démonstration des opérations.</p></div></div>
+      <div class="stats-grid">
+        <article class="stat"><span data-i18n="totalStakes">Mises totales</span><strong id="adminStakes">0 HTG</strong></article>
+        <article class="stat"><span data-i18n="openBets">Paris ouverts</span><strong id="adminOpenBets">0</strong></article>
+        <article class="stat"><span data-i18n="transactions">Transactions</span><strong id="adminTransactions">0</strong></article>
+        <article class="stat"><span data-i18n="users">Utilisateurs</span><strong>1</strong></article>
+      </div>
+      <div class="panel">
+        <h2 data-i18n="systemControl">Contrôle du système</h2>
+        <p data-i18n="systemControlText">Les calculs financiers sensibles sont effectués côté serveur et ne sont pas affichés aux utilisateurs.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="authModal" class="modal">
+    <div class="modal-card">
+      <button class="close" data-close="authModal">×</button>
+      <h2 data-i18n="loginRegister">Connexion / Inscription</h2>
+      <p data-i18n="otpText">Entrez votre numéro puis le code reçu.</p>
+      <label data-i18n="phone">Numéro de téléphone</label>
+      <input id="authPhone" type="tel" data-i18n-placeholder="phonePlaceholder" placeholder="+509 XX XX XX XX">
+      <label class="check"><input id="ageCheck" type="checkbox"><span data-i18n="ageConfirm">Je confirme avoir au moins 18 ans.</span></label>
+      <button id="sendOtpBtn" class="primary full" data-i18n="sendCode">Envoyer le code</button>
+      <div id="recaptcha-container"></div>
+      <div id="otpArea" class="hidden">
+        <label data-i18n="code">Code</label>
+        <input id="otpCode" inputmode="numeric" maxlength="6">
+        <button id="verifyOtpBtn" class="primary full" data-i18n="verify">Vérifier</button>
+      </div>
+      <div id="authStatus" class="status"></div>
+    </div>
+  </div>
+
+  <div id="limitsModal" class="modal">
+    <div class="modal-card">
+      <button class="close" data-close="limitsModal">×</button>
+      <h2 data-i18n="limits">Mes limites</h2>
+      <p data-i18n="limitsInfo">Définissez des limites qui ne peuvent pas être dépassées côté serveur.</p>
+      <button data-go="profile" data-close="limitsModal" class="primary full" data-i18n="manageLimits">Gérer les limites</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
