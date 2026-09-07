@@ -1,22 +1,17 @@
 // =====================================================
-// MYSTROPARYAJ - FINAL SCRIPT.JS
-// Firebase Auth + Worker API + Multi-language
+// MYSTROPARYAJ - SCRIPT.JS COMPLET
+// Firebase Auth + Worker API + Wallet + Agent + Admin
+// Multi-language + PWA
 // =====================================================
 
 import {
   auth,
-  db,
   registerWithEmail,
   loginWithEmail,
   resetPassword,
   watchAuth,
   logoutUser
 } from "./firebase-config.js";
-
-import {
-  doc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 
 // =====================================================
@@ -44,38 +39,41 @@ const $$ = selector =>
 
 const state = {
   lang:
-    localStorage.getItem("mp_lang") || "ht",
+    localStorage.getItem("mp_lang") ||
+    "ht",
 
   currency:
-    localStorage.getItem("mp_currency") || "HTG",
+    localStorage.getItem("mp_currency") ||
+    "HTG",
 
   user: null,
-
-  profile: null,
+  me: null,
 
   isAdmin: false,
-
   isAgent: false,
 
   paymentMode: "deposit",
-
   provider: "moncash",
 
   sport: "football",
 
+  events: [],
   selections: [],
 
-  balances: {
-    HTG: 0,
-    USD: 0,
-    EUR: 0,
-    CAD: 0,
-    DOP: 0
+  wallet: {
+    balances: {
+      HTG: 0,
+      USD: 0,
+      EUR: 0,
+      CAD: 0,
+      DOP: 0
+    }
   },
 
   history: [],
-
-  rates: null
+  bets: [],
+  rates: null,
+  agentRequest: null
 };
 
 
@@ -94,159 +92,402 @@ const I18N = {
     history: "Istwa",
     profile: "Pwofil",
     admin: "Administrasyon",
+
     agentSpace: "Espas ajan",
+    agentRequest: "Demann ajan",
 
-    responsible: "Jwe avèk responsabilite.",
-    limits: "Limit mwen",
+    responsible:
+      "Jwe avèk responsabilite.",
 
-    securePlatform: "Platfòm sekirize",
-    heroTitle: "Parye fasil. Swiv tout bagay klè.",
+    limits:
+      "Limit mwen",
+
+    securePlatform:
+      "Platfòm sekirize",
+
+    heroTitle:
+      "Parye fasil. Swiv tout bagay klè.",
+
     heroText:
       "15 kategori, plizyè lajan, MonCash, NatCash ak estatistik.",
-    startBet: "Gade paryaj",
-    manageWallet: "Jere bous la",
+
+    startBet:
+      "Gade paryaj",
+
+    manageWallet:
+      "Jere bous la",
+
     securePlatformText:
       "Paryaj, bous ak peman nan yon sèl aplikasyon.",
 
-    balance: "Balans",
-    available: "Disponib",
-    openBets: "Paryaj ouvè",
-    activeTickets: "Tikè aktif",
-    todayBets: "Paryaj jodi a",
-    activity: "Aktivite",
-    transactions: "Tranzaksyon",
+    balance:
+      "Balans",
 
-    featured: "Evènman vedèt",
-    seeAll: "Wè tout",
-    weeklyActivity: "Aktivite semèn",
+    available:
+      "Disponib",
+
+    openBets:
+      "Paryaj ouvè",
+
+    activeTickets:
+      "Tikè aktif",
+
+    todayBets:
+      "Paryaj jodi a",
+
+    activity:
+      "Aktivite",
+
+    transactions:
+      "Tranzaksyon",
+
+    featured:
+      "Evènman vedèt",
+
+    seeAll:
+      "Wè tout",
 
     chooseEvent:
       "Chwazi yon kategori epi yon paryaj.",
-    allEvents: "Tout evènman",
-    searchEvent: "Chèche yon evènman",
+
+    allEvents:
+      "Tout evènman",
+
+    searchEvent:
+      "Chèche yon evènman",
 
     betslipHelp:
       "Verifye seleksyon yo anvan ou valide.",
-    stake: "Miz",
-    totalOdds: "Kòt total",
-    potentialReturn: "Retou posib",
-    placeBet: "Valide paryaj",
 
-    legalNotice:
-      "Operasyon ak lajan reyèl mande otorizasyon legal ak yon backend sekirize.",
+    stake:
+      "Miz",
+
+    totalOdds:
+      "Kòt total",
+
+    potentialReturn:
+      "Retou posib",
+
+    placeBet:
+      "Valide paryaj",
+
+    betSecurity:
+      "Kòt ak balans yo verifye sou sèvè a anvan tikè a aksepte.",
 
     walletText:
       "Depo, retrè ak balans ou.",
-    availableBalance: "Balans disponib",
-    deposit: "Depo",
-    withdraw: "Retrè",
-    paymentMethod: "Metòd peman",
-    mobileMoney: "Lajan mobil",
-    phone: "Nimewo telefòn",
-    phonePlaceholder: "+509 XX XX XX XX",
-    amount: "Montan",
-    continue: "Kontinye",
+
+    availableBalance:
+      "Balans disponib",
+
+    deposit:
+      "Depo",
+
+    withdraw:
+      "Retrè",
+
+    paymentMethod:
+      "Metòd peman",
+
+    mobileMoney:
+      "Lajan mobil",
+
+    phone:
+      "Nimewo telefòn",
+
+    phonePlaceholder:
+      "+509 XX XX XX XX",
+
+    amount:
+      "Montan",
+
+    continue:
+      "Kontinye",
 
     exchangeText:
       "Konvèti ant lajan ki disponib.",
-    from: "Soti",
-    to: "Pou",
-    convert: "Konvèti",
+
+    from:
+      "Soti",
+
+    to:
+      "Pou",
+
+    convert:
+      "Konvèti",
+
     rateNotice:
       "To yo soti nan sèvè MystroParyaj.",
 
     historyText:
       "Paryaj ak tranzaksyon ou yo.",
-    date: "Dat",
-    type: "Tip",
-    details: "Detay",
-    status: "Estati",
+
+    date:
+      "Dat",
+
+    type:
+      "Tip",
+
+    details:
+      "Detay",
+
+    status:
+      "Estati",
 
     profileText:
       "Kont, sekirite ak jwèt responsab.",
-    email: "Adrès e-mail",
-    accountType: "Kalite kont",
-    language: "Lang",
-    mainCurrency: "Lajan prensipal",
 
-    responsibleGaming: "Jwèt responsab",
-    dailyDepositLimit: "Limit depo/jou",
-    dailyBetLimit: "Limit miz/jou",
-    save: "Anrejistre",
-    selfExclude: "Oto-ekskli",
+    email:
+      "Adrès e-mail",
+
+    accountType:
+      "Kalite kont",
+
+    language:
+      "Lang",
+
+    mainCurrency:
+      "Lajan prensipal",
+
+    responsibleGaming:
+      "Jwèt responsab",
+
+    dailyDepositLimit:
+      "Limit depo/jou",
+
+    dailyBetLimit:
+      "Limit miz/jou",
+
+    save:
+      "Anrejistre",
+
+    selfExclude:
+      "Oto-ekskli",
 
     agentSpaceText:
       "Zòn rezève pou ajan MystroParyaj ki valide.",
-    agentClients: "Jwè asosye",
-    agentCommission: "Komisyon",
+
+    agentClients:
+      "Jwè asosye",
+
+    agentCommission:
+      "Komisyon",
+
+    agentCode:
+      "Kòd ajan",
+
+    agentCodePlaceholder:
+      "Eg. MP-A1B2C3",
+
+    linkAgent:
+      "Lye ajan",
+
+    linkedPlayers:
+      "Jwè asosye",
 
     adminText:
       "Jesyon sekirize MystroParyaj.",
-    totalStakes: "Total miz",
-    users: "Itilizatè",
 
-    loginRegister: "Konekte / Enskri",
+    totalStakes:
+      "Total miz",
+
+    users:
+      "Itilizatè",
+
+    loginRegister:
+      "Konekte / Enskri",
+
     emailAuthText:
       "Konekte oswa kreye kont ou ak e-mail ou.",
-    password: "Modpas",
-    emailPlaceholder: "egzanp@email.com",
-    passwordPlaceholder: "Omwen 6 karaktè",
-    playerAccount: "Kont jwè",
+
+    password:
+      "Modpas",
+
+    emailPlaceholder:
+      "egzanp@email.com",
+
+    passwordPlaceholder:
+      "Omwen 6 karaktè",
+
+    playerAccount:
+      "Kont jwè",
+
     playerAccountText:
       "Pou jwe epi jere bous ou.",
-    agentAccount: "Kont ajan",
+
+    agentAccount:
+      "Kont ajan",
+
     agentAccountText:
-      "Demann kont ajan an dwe valide.",
+      "W ap ranpli demann ajan an apre enskripsyon.",
+
     ageConfirm:
       "Mwen konfime mwen gen omwen 18 an.",
-    login: "Konekte",
-    register: "Kreye kont",
-    logout: "Dekonekte",
-    forgotPassword: "Ou bliye modpas?",
+
+    login:
+      "Konekte",
+
+    register:
+      "Kreye kont",
+
+    logout:
+      "Dekonekte",
+
+    forgotPassword:
+      "Ou bliye modpas?",
 
     limitsInfo:
       "Jere limit jwèt responsab ou yo.",
-    manageLimits: "Jere limit yo",
 
-    player: "Kont jwè",
-    agentPending: "Demann ajan an ap tann",
-    agent: "Kont ajan",
+    manageLimits:
+      "Jere limit yo",
 
-    loginRequired: "Konekte anvan.",
+    agentRequestHelp:
+      "Ranpli enfòmasyon yo. Kont ajan an aktive sèlman apre verifikasyon.",
+
+    fullName:
+      "Non konplè",
+
+    city:
+      "Vil / komin",
+
+    address:
+      "Adrès",
+
+    idType:
+      "Kalite pyès idantite",
+
+    idNumber:
+      "Nimewo pyès la",
+
+    agentTerms:
+      "Mwen aksepte verifikasyon ak kondisyon kont ajan yo.",
+
+    submitRequest:
+      "Voye demann",
+
+    agentCriteria:
+      "Kritè kont ajan",
+
+    criteria18:
+      "Gen omwen 18 an.",
+
+    criteriaIdentity:
+      "Bay enfòmasyon idantite ki kòrèk.",
+
+    criteriaContact:
+      "Gen nimewo telefòn ak adrès ki valab.",
+
+    criteriaReview:
+      "MystroParyaj dwe valide demann nan anvan kont lan aktive.",
+
+    criteriaRules:
+      "Respekte règ jwèt responsab, KYC/AML ak règleman platfòm nan.",
+
+    createEvent:
+      "Kreye evènman",
+
+    league:
+      "Lig",
+
+    homeTeam:
+      "Ekip/Jwè 1",
+
+    awayTeam:
+      "Ekip/Jwè 2",
+
+    startTime:
+      "Dat/lè",
+
+    markets:
+      "Mache/kòt",
+
+    create:
+      "Kreye",
+
+    settleEvent:
+      "Regle evènman",
+
+    winningMarket:
+      "Mache gagnan",
+
+    settle:
+      "Regle epi peye gagnan yo",
+
+    settleNotice:
+      "Lè rezilta a verifye epi regle sou sèvè a, tikè gagnan yo kredite otomatikman.",
+
+    agentRequests:
+      "Demann ajan",
+
+    refresh:
+      "Rafrechi",
+
+    actions:
+      "Aksyon",
+
+    loginRequired:
+      "Konekte anvan.",
+
     ageRequired:
       "Ou dwe konfime ou gen omwen 18 an.",
+
     invalidEmail:
       "Adrès e-mail la pa valab.",
+
     invalidPassword:
       "Modpas la dwe gen omwen 6 karaktè.",
+
     accountCreated:
       "Kont lan kreye avèk siksè.",
-    agentRequestCreated:
-      "Kont lan kreye. Demann ajan an ap tann validasyon.",
+
+    agentStart:
+      "Kont lan kreye. Ranpli demann ajan an.",
+
     loginSuccess:
       "Ou konekte avèk siksè.",
+
     resetSent:
       "E-mail pou chanje modpas la voye.",
+
     invalidCredentials:
       "E-mail oswa modpas la pa kòrèk.",
+
     emailUsed:
       "E-mail sa a deja gen yon kont.",
 
     emptyTicket:
       "Pa gen seleksyon nan tikè a.",
+
     selectionAdded:
       "Seleksyon ajoute nan tikè a.",
+
     invalidAmount:
       "Montan an pa valab.",
+
     serverError:
       "Sèvè a pa reponn kòrèkteman.",
+
     paymentProcessing:
       "Demann nan ap trete...",
-    saved: "Anrejistre.",
+
+    saved:
+      "Anrejistre.",
+
     excluded:
       "Oto-eksklizyon aktive.",
+
     noHistory:
-      "Pa gen tranzaksyon pou montre."
+      "Pa gen tranzaksyon pou montre.",
+
+    noEvents:
+      "Pa gen evènman ouvè kounye a.",
+
+    natcashUnavailable:
+      "NatCash mande API marchand ofisyèl anvan tranzaksyon reyèl kapab aktive.",
+
+    moncashLive:
+      "MonCash itilize mòd ki konfigire sou sèvè MystroParyaj la."
   },
 
 
@@ -260,151 +501,400 @@ const I18N = {
     profile: "Profil",
     admin: "Administration",
     agentSpace: "Espace agent",
+    agentRequest: "Demande agent",
 
-    responsible: "Jouez de façon responsable.",
-    limits: "Mes limites",
+    responsible:
+      "Jouez de façon responsable.",
 
-    securePlatform: "Plateforme sécurisée",
+    limits:
+      "Mes limites",
+
+    securePlatform:
+      "Plateforme sécurisée",
+
     heroTitle:
       "Pariez simplement. Suivez tout clairement.",
+
     heroText:
       "15 catégories, portefeuille multi-devises, MonCash, NatCash et statistiques.",
-    startBet: "Voir les paris",
-    manageWallet: "Gérer le portefeuille",
+
+    startBet:
+      "Voir les paris",
+
+    manageWallet:
+      "Gérer le portefeuille",
+
     securePlatformText:
-      "Paris, portefeuille et paiements réunis dans une seule application.",
+      "Paris, portefeuille et paiements dans une seule application.",
 
-    balance: "Solde",
-    available: "Disponible",
-    openBets: "Paris ouverts",
-    activeTickets: "Tickets actifs",
-    todayBets: "Paris du jour",
-    activity: "Activité",
-    transactions: "Transactions",
+    balance:
+      "Solde",
 
-    featured: "Événements en vedette",
-    seeAll: "Tout voir",
-    weeklyActivity: "Activité hebdomadaire",
+    available:
+      "Disponible",
+
+    openBets:
+      "Paris ouverts",
+
+    activeTickets:
+      "Tickets actifs",
+
+    todayBets:
+      "Paris du jour",
+
+    activity:
+      "Activité",
+
+    transactions:
+      "Transactions",
+
+    featured:
+      "Événements en vedette",
+
+    seeAll:
+      "Tout voir",
 
     chooseEvent:
       "Choisissez une catégorie puis un pari.",
-    allEvents: "Tous les événements",
-    searchEvent: "Rechercher un événement",
+
+    allEvents:
+      "Tous les événements",
+
+    searchEvent:
+      "Rechercher un événement",
 
     betslipHelp:
       "Vérifiez vos sélections avant validation.",
-    stake: "Mise",
-    totalOdds: "Cote totale",
-    potentialReturn: "Retour potentiel",
-    placeBet: "Valider le pari",
 
-    legalNotice:
-      "Les opérations réelles nécessitent une autorisation légale et un serveur sécurisé.",
+    stake:
+      "Mise",
+
+    totalOdds:
+      "Cote totale",
+
+    potentialReturn:
+      "Retour potentiel",
+
+    placeBet:
+      "Valider le pari",
+
+    betSecurity:
+      "Les cotes et le solde sont vérifiés par le serveur avant validation.",
 
     walletText:
       "Dépôts, retraits et soldes.",
-    availableBalance: "Solde disponible",
-    deposit: "Dépôt",
-    withdraw: "Retrait",
-    paymentMethod: "Méthode de paiement",
-    mobileMoney: "Mobile Money",
-    phone: "Numéro de téléphone",
-    phonePlaceholder: "+509 XX XX XX XX",
-    amount: "Montant",
-    continue: "Continuer",
+
+    availableBalance:
+      "Solde disponible",
+
+    deposit:
+      "Dépôt",
+
+    withdraw:
+      "Retrait",
+
+    paymentMethod:
+      "Méthode de paiement",
+
+    mobileMoney:
+      "Mobile Money",
+
+    phone:
+      "Numéro de téléphone",
+
+    phonePlaceholder:
+      "+509 XX XX XX XX",
+
+    amount:
+      "Montant",
+
+    continue:
+      "Continuer",
 
     exchangeText:
       "Convertissez entre les devises disponibles.",
-    from: "De",
-    to: "Vers",
-    convert: "Convertir",
+
+    from:
+      "De",
+
+    to:
+      "Vers",
+
+    convert:
+      "Convertir",
+
     rateNotice:
       "Les taux proviennent du serveur MystroParyaj.",
 
     historyText:
       "Vos paris et transactions.",
-    date: "Date",
-    type: "Type",
-    details: "Détails",
-    status: "Statut",
+
+    date:
+      "Date",
+
+    type:
+      "Type",
+
+    details:
+      "Détails",
+
+    status:
+      "Statut",
 
     profileText:
       "Compte, sécurité et jeu responsable.",
-    email: "Adresse e-mail",
-    accountType: "Type de compte",
-    language: "Langue",
-    mainCurrency: "Devise principale",
 
-    responsibleGaming: "Jeu responsable",
-    dailyDepositLimit: "Limite dépôt/jour",
-    dailyBetLimit: "Limite mises/jour",
-    save: "Enregistrer",
-    selfExclude: "Auto-exclusion",
+    email:
+      "Adresse e-mail",
+
+    accountType:
+      "Type de compte",
+
+    language:
+      "Langue",
+
+    mainCurrency:
+      "Devise principale",
+
+    responsibleGaming:
+      "Jeu responsable",
+
+    dailyDepositLimit:
+      "Limite dépôt/jour",
+
+    dailyBetLimit:
+      "Limite mises/jour",
+
+    save:
+      "Enregistrer",
+
+    selfExclude:
+      "Auto-exclusion",
 
     agentSpaceText:
-      "Zone réservée aux agents MystroParyaj validés.",
-    agentClients: "Joueurs associés",
-    agentCommission: "Commission",
+      "Zone réservée aux agents approuvés.",
+
+    agentClients:
+      "Joueurs associés",
+
+    agentCommission:
+      "Commission",
+
+    agentCode:
+      "Code agent",
+
+    agentCodePlaceholder:
+      "Ex. MP-A1B2C3",
+
+    linkAgent:
+      "Associer",
+
+    linkedPlayers:
+      "Joueurs associés",
 
     adminText:
       "Gestion sécurisée de MystroParyaj.",
-    totalStakes: "Mises totales",
-    users: "Utilisateurs",
 
-    loginRegister: "Connexion / Inscription",
+    totalStakes:
+      "Mises totales",
+
+    users:
+      "Utilisateurs",
+
+    loginRegister:
+      "Connexion / Inscription",
+
     emailAuthText:
       "Connectez-vous ou créez votre compte avec votre e-mail.",
-    password: "Mot de passe",
-    emailPlaceholder: "exemple@email.com",
-    passwordPlaceholder: "Minimum 6 caractères",
-    playerAccount: "Compte joueur",
+
+    password:
+      "Mot de passe",
+
+    emailPlaceholder:
+      "exemple@email.com",
+
+    passwordPlaceholder:
+      "Minimum 6 caractères",
+
+    playerAccount:
+      "Compte joueur",
+
     playerAccountText:
       "Pour jouer et gérer votre portefeuille.",
-    agentAccount: "Compte agent",
+
+    agentAccount:
+      "Compte agent",
+
     agentAccountText:
-      "La demande d'agent doit être validée.",
+      "Vous remplirez la demande agent après l'inscription.",
+
     ageConfirm:
       "Je confirme avoir au moins 18 ans.",
-    login: "Connexion",
-    register: "Créer un compte",
-    logout: "Déconnexion",
-    forgotPassword: "Mot de passe oublié ?",
+
+    login:
+      "Connexion",
+
+    register:
+      "Créer un compte",
+
+    logout:
+      "Déconnexion",
+
+    forgotPassword:
+      "Mot de passe oublié ?",
 
     limitsInfo:
       "Gérez vos limites de jeu responsable.",
-    manageLimits: "Gérer les limites",
 
-    player: "Compte joueur",
-    agentPending: "Demande agent en attente",
-    agent: "Compte agent",
+    manageLimits:
+      "Gérer les limites",
 
-    loginRequired: "Connectez-vous d'abord.",
+    agentRequestHelp:
+      "Remplissez les informations. Le compte agent est activé après vérification.",
+
+    fullName:
+      "Nom complet",
+
+    city:
+      "Ville / commune",
+
+    address:
+      "Adresse",
+
+    idType:
+      "Type de pièce d'identité",
+
+    idNumber:
+      "Numéro de la pièce",
+
+    agentTerms:
+      "J'accepte la vérification et les conditions du compte agent.",
+
+    submitRequest:
+      "Envoyer la demande",
+
+    agentCriteria:
+      "Critères du compte agent",
+
+    criteria18:
+      "Avoir au moins 18 ans.",
+
+    criteriaIdentity:
+      "Fournir des informations d'identité correctes.",
+
+    criteriaContact:
+      "Avoir un numéro et une adresse valides.",
+
+    criteriaReview:
+      "MystroParyaj doit approuver la demande avant activation.",
+
+    criteriaRules:
+      "Respecter les règles de jeu responsable et les exigences KYC/AML.",
+
+    createEvent:
+      "Créer un événement",
+
+    league:
+      "Ligue",
+
+    homeTeam:
+      "Équipe/Joueur 1",
+
+    awayTeam:
+      "Équipe/Joueur 2",
+
+    startTime:
+      "Date/heure",
+
+    markets:
+      "Marchés/cotes",
+
+    create:
+      "Créer",
+
+    settleEvent:
+      "Régler l'événement",
+
+    winningMarket:
+      "Marché gagnant",
+
+    settle:
+      "Régler et payer les gagnants",
+
+    settleNotice:
+      "Après validation du résultat, les gagnants sont crédités automatiquement.",
+
+    agentRequests:
+      "Demandes agents",
+
+    refresh:
+      "Actualiser",
+
+    actions:
+      "Actions",
+
+    loginRequired:
+      "Connectez-vous d'abord.",
+
     ageRequired:
       "Vous devez confirmer avoir au moins 18 ans.",
-    invalidEmail: "Adresse e-mail invalide.",
+
+    invalidEmail:
+      "Adresse e-mail invalide.",
+
     invalidPassword:
       "Le mot de passe doit contenir au moins 6 caractères.",
-    accountCreated: "Compte créé avec succès.",
-    agentRequestCreated:
-      "Compte créé. La demande agent attend une validation.",
-    loginSuccess: "Connexion réussie.",
+
+    accountCreated:
+      "Compte créé avec succès.",
+
+    agentStart:
+      "Compte créé. Complétez maintenant votre demande agent.",
+
+    loginSuccess:
+      "Connexion réussie.",
+
     resetSent:
       "E-mail de réinitialisation envoyé.",
+
     invalidCredentials:
       "E-mail ou mot de passe incorrect.",
+
     emailUsed:
       "Cette adresse e-mail possède déjà un compte.",
 
-    emptyTicket: "Aucune sélection.",
+    emptyTicket:
+      "Aucune sélection.",
+
     selectionAdded:
       "Sélection ajoutée au ticket.",
-    invalidAmount: "Montant invalide.",
-    serverError: "Erreur du serveur.",
+
+    invalidAmount:
+      "Montant invalide.",
+
+    serverError:
+      "Erreur du serveur.",
+
     paymentProcessing:
       "Traitement de la demande...",
-    saved: "Enregistré.",
-    excluded: "Auto-exclusion activée.",
-    noHistory: "Aucune transaction."
+
+    saved:
+      "Enregistré.",
+
+    excluded:
+      "Auto-exclusion activée.",
+
+    noHistory:
+      "Aucune transaction.",
+
+    noEvents:
+      "Aucun événement ouvert.",
+
+    natcashUnavailable:
+      "NatCash nécessite l'API marchand officielle avant l'activation des transactions réelles.",
+
+    moncashLive:
+      "MonCash utilise le mode configuré sur le serveur MystroParyaj."
   },
 
 
@@ -418,145 +908,400 @@ const I18N = {
     profile: "Profile",
     admin: "Administration",
     agentSpace: "Agent area",
+    agentRequest: "Agent application",
 
-    responsible: "Gamble responsibly.",
-    limits: "My limits",
+    responsible:
+      "Gamble responsibly.",
 
-    securePlatform: "Secure platform",
-    heroTitle: "Bet simply. Track everything clearly.",
+    limits:
+      "My limits",
+
+    securePlatform:
+      "Secure platform",
+
+    heroTitle:
+      "Bet simply. Track everything clearly.",
+
     heroText:
       "15 categories, multi-currency wallet, MonCash, NatCash and statistics.",
-    startBet: "View bets",
-    manageWallet: "Manage wallet",
+
+    startBet:
+      "View bets",
+
+    manageWallet:
+      "Manage wallet",
+
     securePlatformText:
       "Betting, wallet and payments in one application.",
 
-    balance: "Balance",
-    available: "Available",
-    openBets: "Open bets",
-    activeTickets: "Active tickets",
-    todayBets: "Today's bets",
-    activity: "Activity",
-    transactions: "Transactions",
+    balance:
+      "Balance",
 
-    featured: "Featured events",
-    seeAll: "See all",
-    weeklyActivity: "Weekly activity",
+    available:
+      "Available",
+
+    openBets:
+      "Open bets",
+
+    activeTickets:
+      "Active tickets",
+
+    todayBets:
+      "Today's bets",
+
+    activity:
+      "Activity",
+
+    transactions:
+      "Transactions",
+
+    featured:
+      "Featured events",
+
+    seeAll:
+      "See all",
 
     chooseEvent:
-      "Choose a category and then a bet.",
-    allEvents: "All events",
-    searchEvent: "Search event",
+      "Choose a category and a bet.",
+
+    allEvents:
+      "All events",
+
+    searchEvent:
+      "Search event",
 
     betslipHelp:
       "Review your selections before submitting.",
-    stake: "Stake",
-    totalOdds: "Total odds",
-    potentialReturn: "Potential return",
-    placeBet: "Place bet",
 
-    legalNotice:
-      "Real-money operations require legal authorization and a secure server.",
+    stake:
+      "Stake",
+
+    totalOdds:
+      "Total odds",
+
+    potentialReturn:
+      "Potential return",
+
+    placeBet:
+      "Place bet",
+
+    betSecurity:
+      "Odds and balance are verified by the server before the ticket is accepted.",
 
     walletText:
       "Deposits, withdrawals and balances.",
-    availableBalance: "Available balance",
-    deposit: "Deposit",
-    withdraw: "Withdraw",
-    paymentMethod: "Payment method",
-    mobileMoney: "Mobile Money",
-    phone: "Phone number",
-    phonePlaceholder: "+509 XX XX XX XX",
-    amount: "Amount",
-    continue: "Continue",
+
+    availableBalance:
+      "Available balance",
+
+    deposit:
+      "Deposit",
+
+    withdraw:
+      "Withdraw",
+
+    paymentMethod:
+      "Payment method",
+
+    mobileMoney:
+      "Mobile Money",
+
+    phone:
+      "Phone number",
+
+    phonePlaceholder:
+      "+509 XX XX XX XX",
+
+    amount:
+      "Amount",
+
+    continue:
+      "Continue",
 
     exchangeText:
       "Convert between available currencies.",
-    from: "From",
-    to: "To",
-    convert: "Convert",
+
+    from:
+      "From",
+
+    to:
+      "To",
+
+    convert:
+      "Convert",
+
     rateNotice:
-      "Rates are retrieved from the MystroParyaj server.",
+      "Rates come from the MystroParyaj server.",
 
     historyText:
       "Your bets and transactions.",
-    date: "Date",
-    type: "Type",
-    details: "Details",
-    status: "Status",
+
+    date:
+      "Date",
+
+    type:
+      "Type",
+
+    details:
+      "Details",
+
+    status:
+      "Status",
 
     profileText:
       "Account, security and responsible gaming.",
-    email: "Email address",
-    accountType: "Account type",
-    language: "Language",
-    mainCurrency: "Main currency",
 
-    responsibleGaming: "Responsible gaming",
-    dailyDepositLimit: "Daily deposit limit",
-    dailyBetLimit: "Daily betting limit",
-    save: "Save",
-    selfExclude: "Self-exclusion",
+    email:
+      "Email address",
+
+    accountType:
+      "Account type",
+
+    language:
+      "Language",
+
+    mainCurrency:
+      "Main currency",
+
+    responsibleGaming:
+      "Responsible gaming",
+
+    dailyDepositLimit:
+      "Daily deposit limit",
+
+    dailyBetLimit:
+      "Daily betting limit",
+
+    save:
+      "Save",
+
+    selfExclude:
+      "Self-exclusion",
 
     agentSpaceText:
       "Area reserved for approved MystroParyaj agents.",
-    agentClients: "Linked players",
-    agentCommission: "Commission",
 
-    adminText: "Secure MystroParyaj management.",
-    totalStakes: "Total stakes",
-    users: "Users",
+    agentClients:
+      "Linked players",
 
-    loginRegister: "Sign in / Register",
+    agentCommission:
+      "Commission",
+
+    agentCode:
+      "Agent code",
+
+    agentCodePlaceholder:
+      "Ex. MP-A1B2C3",
+
+    linkAgent:
+      "Link agent",
+
+    linkedPlayers:
+      "Linked players",
+
+    adminText:
+      "Secure MystroParyaj management.",
+
+    totalStakes:
+      "Total stakes",
+
+    users:
+      "Users",
+
+    loginRegister:
+      "Sign in / Register",
+
     emailAuthText:
       "Sign in or create your account with email.",
-    password: "Password",
-    emailPlaceholder: "example@email.com",
-    passwordPlaceholder: "Minimum 6 characters",
-    playerAccount: "Player account",
+
+    password:
+      "Password",
+
+    emailPlaceholder:
+      "example@email.com",
+
+    passwordPlaceholder:
+      "Minimum 6 characters",
+
+    playerAccount:
+      "Player account",
+
     playerAccountText:
       "For betting and managing your wallet.",
-    agentAccount: "Agent account",
+
+    agentAccount:
+      "Agent account",
+
     agentAccountText:
-      "Agent requests require approval.",
+      "Complete the agent application after registration.",
+
     ageConfirm:
       "I confirm that I am at least 18 years old.",
-    login: "Sign in",
-    register: "Create account",
-    logout: "Sign out",
-    forgotPassword: "Forgot password?",
+
+    login:
+      "Sign in",
+
+    register:
+      "Create account",
+
+    logout:
+      "Sign out",
+
+    forgotPassword:
+      "Forgot password?",
 
     limitsInfo:
       "Manage your responsible gaming limits.",
-    manageLimits: "Manage limits",
 
-    player: "Player account",
-    agentPending: "Agent request pending",
-    agent: "Agent account",
+    manageLimits:
+      "Manage limits",
 
-    loginRequired: "Sign in first.",
+    agentRequestHelp:
+      "Complete the information. Agent access is activated only after verification.",
+
+    fullName:
+      "Full name",
+
+    city:
+      "City / commune",
+
+    address:
+      "Address",
+
+    idType:
+      "ID type",
+
+    idNumber:
+      "ID number",
+
+    agentTerms:
+      "I accept verification and the agent account terms.",
+
+    submitRequest:
+      "Submit application",
+
+    agentCriteria:
+      "Agent account criteria",
+
+    criteria18:
+      "Be at least 18 years old.",
+
+    criteriaIdentity:
+      "Provide correct identity information.",
+
+    criteriaContact:
+      "Provide a valid phone number and address.",
+
+    criteriaReview:
+      "MystroParyaj must approve the application before activation.",
+
+    criteriaRules:
+      "Respect responsible gaming and KYC/AML requirements.",
+
+    createEvent:
+      "Create event",
+
+    league:
+      "League",
+
+    homeTeam:
+      "Team/Player 1",
+
+    awayTeam:
+      "Team/Player 2",
+
+    startTime:
+      "Date/time",
+
+    markets:
+      "Markets/odds",
+
+    create:
+      "Create",
+
+    settleEvent:
+      "Settle event",
+
+    winningMarket:
+      "Winning market",
+
+    settle:
+      "Settle and pay winners",
+
+    settleNotice:
+      "After the result is verified, winning wallets are automatically credited.",
+
+    agentRequests:
+      "Agent applications",
+
+    refresh:
+      "Refresh",
+
+    actions:
+      "Actions",
+
+    loginRequired:
+      "Sign in first.",
+
     ageRequired:
       "You must confirm that you are at least 18.",
-    invalidEmail: "Invalid email address.",
+
+    invalidEmail:
+      "Invalid email address.",
+
     invalidPassword:
       "Password must contain at least 6 characters.",
-    accountCreated: "Account created successfully.",
-    agentRequestCreated:
-      "Account created. Agent request is pending approval.",
-    loginSuccess: "Signed in successfully.",
-    resetSent: "Password reset email sent.",
-    invalidCredentials: "Incorrect email or password.",
+
+    accountCreated:
+      "Account created successfully.",
+
+    agentStart:
+      "Account created. Complete your agent application.",
+
+    loginSuccess:
+      "Signed in successfully.",
+
+    resetSent:
+      "Password reset email sent.",
+
+    invalidCredentials:
+      "Incorrect email or password.",
+
     emailUsed:
       "An account already exists with this email.",
 
-    emptyTicket: "No selections.",
-    selectionAdded: "Selection added.",
-    invalidAmount: "Invalid amount.",
-    serverError: "Server error.",
-    paymentProcessing: "Processing request...",
-    saved: "Saved.",
-    excluded: "Self-exclusion enabled.",
-    noHistory: "No transactions."
+    emptyTicket:
+      "No selections.",
+
+    selectionAdded:
+      "Selection added.",
+
+    invalidAmount:
+      "Invalid amount.",
+
+    serverError:
+      "Server error.",
+
+    paymentProcessing:
+      "Processing request...",
+
+    saved:
+      "Saved.",
+
+    excluded:
+      "Self-exclusion enabled.",
+
+    noHistory:
+      "No transactions.",
+
+    noEvents:
+      "No open events.",
+
+    natcashUnavailable:
+      "NatCash requires its official merchant API before real transactions can be enabled.",
+
+    moncashLive:
+      "MonCash uses the mode configured on the MystroParyaj server."
   },
 
 
@@ -570,158 +1315,406 @@ const I18N = {
     profile: "Perfil",
     admin: "Administración",
     agentSpace: "Área de agente",
+    agentRequest: "Solicitud de agente",
 
-    responsible: "Juega responsablemente.",
-    limits: "Mis límites",
+    responsible:
+      "Juega responsablemente.",
 
-    securePlatform: "Plataforma segura",
+    limits:
+      "Mis límites",
+
+    securePlatform:
+      "Plataforma segura",
+
     heroTitle:
       "Apuesta fácilmente. Sigue todo claramente.",
+
     heroText:
       "15 categorías, billetera multidivisa, MonCash, NatCash y estadísticas.",
-    startBet: "Ver apuestas",
-    manageWallet: "Gestionar billetera",
+
+    startBet:
+      "Ver apuestas",
+
+    manageWallet:
+      "Gestionar billetera",
+
     securePlatformText:
       "Apuestas, billetera y pagos en una sola aplicación.",
 
-    balance: "Saldo",
-    available: "Disponible",
-    openBets: "Apuestas abiertas",
-    activeTickets: "Boletos activos",
-    todayBets: "Apuestas de hoy",
-    activity: "Actividad",
-    transactions: "Transacciones",
+    balance:
+      "Saldo",
 
-    featured: "Eventos destacados",
-    seeAll: "Ver todo",
-    weeklyActivity: "Actividad semanal",
+    available:
+      "Disponible",
+
+    openBets:
+      "Apuestas abiertas",
+
+    activeTickets:
+      "Boletos activos",
+
+    todayBets:
+      "Apuestas de hoy",
+
+    activity:
+      "Actividad",
+
+    transactions:
+      "Transacciones",
+
+    featured:
+      "Eventos destacados",
+
+    seeAll:
+      "Ver todo",
 
     chooseEvent:
-      "Elige una categoría y luego una apuesta.",
-    allEvents: "Todos los eventos",
-    searchEvent: "Buscar evento",
+      "Elige una categoría y una apuesta.",
+
+    allEvents:
+      "Todos los eventos",
+
+    searchEvent:
+      "Buscar evento",
 
     betslipHelp:
       "Comprueba tus selecciones antes de validar.",
-    stake: "Apuesta",
-    totalOdds: "Cuota total",
-    potentialReturn: "Retorno potencial",
-    placeBet: "Validar apuesta",
 
-    legalNotice:
-      "Las operaciones con dinero real requieren autorización legal y un servidor seguro.",
+    stake:
+      "Apuesta",
+
+    totalOdds:
+      "Cuota total",
+
+    potentialReturn:
+      "Retorno potencial",
+
+    placeBet:
+      "Validar apuesta",
+
+    betSecurity:
+      "Las cuotas y el saldo son verificados por el servidor antes de aceptar el boleto.",
 
     walletText:
       "Depósitos, retiros y saldos.",
-    availableBalance: "Saldo disponible",
-    deposit: "Depósito",
-    withdraw: "Retiro",
-    paymentMethod: "Método de pago",
-    mobileMoney: "Dinero móvil",
-    phone: "Número de teléfono",
-    phonePlaceholder: "+509 XX XX XX XX",
-    amount: "Monto",
-    continue: "Continuar",
+
+    availableBalance:
+      "Saldo disponible",
+
+    deposit:
+      "Depósito",
+
+    withdraw:
+      "Retiro",
+
+    paymentMethod:
+      "Método de pago",
+
+    mobileMoney:
+      "Dinero móvil",
+
+    phone:
+      "Número de teléfono",
+
+    phonePlaceholder:
+      "+509 XX XX XX XX",
+
+    amount:
+      "Monto",
+
+    continue:
+      "Continuar",
 
     exchangeText:
       "Convierte entre las monedas disponibles.",
-    from: "De",
-    to: "A",
-    convert: "Convertir",
+
+    from:
+      "De",
+
+    to:
+      "A",
+
+    convert:
+      "Convertir",
+
     rateNotice:
       "Las tasas provienen del servidor MystroParyaj.",
 
     historyText:
       "Tus apuestas y transacciones.",
-    date: "Fecha",
-    type: "Tipo",
-    details: "Detalles",
-    status: "Estado",
+
+    date:
+      "Fecha",
+
+    type:
+      "Tipo",
+
+    details:
+      "Detalles",
+
+    status:
+      "Estado",
 
     profileText:
       "Cuenta, seguridad y juego responsable.",
-    email: "Correo electrónico",
-    accountType: "Tipo de cuenta",
-    language: "Idioma",
-    mainCurrency: "Moneda principal",
 
-    responsibleGaming: "Juego responsable",
-    dailyDepositLimit: "Límite diario de depósito",
-    dailyBetLimit: "Límite diario de apuestas",
-    save: "Guardar",
-    selfExclude: "Autoexclusión",
+    email:
+      "Correo electrónico",
+
+    accountType:
+      "Tipo de cuenta",
+
+    language:
+      "Idioma",
+
+    mainCurrency:
+      "Moneda principal",
+
+    responsibleGaming:
+      "Juego responsable",
+
+    dailyDepositLimit:
+      "Límite diario de depósito",
+
+    dailyBetLimit:
+      "Límite diario de apuestas",
+
+    save:
+      "Guardar",
+
+    selfExclude:
+      "Autoexclusión",
 
     agentSpaceText:
-      "Área reservada para agentes MystroParyaj aprobados.",
-    agentClients: "Jugadores asociados",
-    agentCommission: "Comisión",
+      "Área reservada para agentes aprobados.",
+
+    agentClients:
+      "Jugadores asociados",
+
+    agentCommission:
+      "Comisión",
+
+    agentCode:
+      "Código de agente",
+
+    agentCodePlaceholder:
+      "Ej. MP-A1B2C3",
+
+    linkAgent:
+      "Vincular agente",
+
+    linkedPlayers:
+      "Jugadores asociados",
 
     adminText:
       "Gestión segura de MystroParyaj.",
-    totalStakes: "Apuestas totales",
-    users: "Usuarios",
 
-    loginRegister: "Iniciar sesión / Registro",
+    totalStakes:
+      "Apuestas totales",
+
+    users:
+      "Usuarios",
+
+    loginRegister:
+      "Iniciar sesión / Registro",
+
     emailAuthText:
-      "Inicia sesión o crea tu cuenta con tu correo electrónico.",
-    password: "Contraseña",
-    emailPlaceholder: "ejemplo@email.com",
-    passwordPlaceholder: "Mínimo 6 caracteres",
-    playerAccount: "Cuenta de jugador",
+      "Inicia sesión o crea tu cuenta con correo electrónico.",
+
+    password:
+      "Contraseña",
+
+    emailPlaceholder:
+      "ejemplo@email.com",
+
+    passwordPlaceholder:
+      "Mínimo 6 caracteres",
+
+    playerAccount:
+      "Cuenta de jugador",
+
     playerAccountText:
       "Para apostar y gestionar tu billetera.",
-    agentAccount: "Cuenta de agente",
+
+    agentAccount:
+      "Cuenta de agente",
+
     agentAccountText:
-      "La solicitud de agente debe ser aprobada.",
+      "Completa la solicitud de agente después del registro.",
+
     ageConfirm:
       "Confirmo que tengo al menos 18 años.",
-    login: "Iniciar sesión",
-    register: "Crear cuenta",
-    logout: "Cerrar sesión",
-    forgotPassword: "¿Olvidaste tu contraseña?",
+
+    login:
+      "Iniciar sesión",
+
+    register:
+      "Crear cuenta",
+
+    logout:
+      "Cerrar sesión",
+
+    forgotPassword:
+      "¿Olvidaste tu contraseña?",
 
     limitsInfo:
       "Gestiona tus límites de juego responsable.",
-    manageLimits: "Gestionar límites",
 
-    player: "Cuenta de jugador",
-    agentPending: "Solicitud de agente pendiente",
-    agent: "Cuenta de agente",
+    manageLimits:
+      "Gestionar límites",
 
-    loginRequired: "Inicia sesión primero.",
+    agentRequestHelp:
+      "Completa la información. La cuenta de agente se activa después de la verificación.",
+
+    fullName:
+      "Nombre completo",
+
+    city:
+      "Ciudad / comuna",
+
+    address:
+      "Dirección",
+
+    idType:
+      "Tipo de identificación",
+
+    idNumber:
+      "Número de identificación",
+
+    agentTerms:
+      "Acepto la verificación y las condiciones de la cuenta de agente.",
+
+    submitRequest:
+      "Enviar solicitud",
+
+    agentCriteria:
+      "Criterios de cuenta de agente",
+
+    criteria18:
+      "Tener al menos 18 años.",
+
+    criteriaIdentity:
+      "Proporcionar información de identidad correcta.",
+
+    criteriaContact:
+      "Tener un número y dirección válidos.",
+
+    criteriaReview:
+      "MystroParyaj debe aprobar la solicitud antes de activar la cuenta.",
+
+    criteriaRules:
+      "Respetar las reglas de juego responsable y KYC/AML.",
+
+    createEvent:
+      "Crear evento",
+
+    league:
+      "Liga",
+
+    homeTeam:
+      "Equipo/Jugador 1",
+
+    awayTeam:
+      "Equipo/Jugador 2",
+
+    startTime:
+      "Fecha/hora",
+
+    markets:
+      "Mercados/cuotas",
+
+    create:
+      "Crear",
+
+    settleEvent:
+      "Liquidar evento",
+
+    winningMarket:
+      "Mercado ganador",
+
+    settle:
+      "Liquidar y pagar ganadores",
+
+    settleNotice:
+      "Después de verificar el resultado, las billeteras ganadoras se acreditan automáticamente.",
+
+    agentRequests:
+      "Solicitudes de agentes",
+
+    refresh:
+      "Actualizar",
+
+    actions:
+      "Acciones",
+
+    loginRequired:
+      "Inicia sesión primero.",
+
     ageRequired:
       "Debes confirmar que tienes al menos 18 años.",
-    invalidEmail: "Correo electrónico no válido.",
+
+    invalidEmail:
+      "Correo electrónico no válido.",
+
     invalidPassword:
       "La contraseña debe contener al menos 6 caracteres.",
-    accountCreated: "Cuenta creada correctamente.",
-    agentRequestCreated:
-      "Cuenta creada. La solicitud de agente está pendiente.",
-    loginSuccess: "Sesión iniciada correctamente.",
+
+    accountCreated:
+      "Cuenta creada correctamente.",
+
+    agentStart:
+      "Cuenta creada. Completa tu solicitud de agente.",
+
+    loginSuccess:
+      "Sesión iniciada correctamente.",
+
     resetSent:
       "Correo de recuperación enviado.",
+
     invalidCredentials:
       "Correo o contraseña incorrectos.",
+
     emailUsed:
       "Ya existe una cuenta con este correo.",
 
-    emptyTicket: "No hay selecciones.",
+    emptyTicket:
+      "No hay selecciones.",
+
     selectionAdded:
       "Selección añadida al boleto.",
-    invalidAmount: "Monto no válido.",
-    serverError: "Error del servidor.",
+
+    invalidAmount:
+      "Monto no válido.",
+
+    serverError:
+      "Error del servidor.",
+
     paymentProcessing:
       "Procesando solicitud...",
-    saved: "Guardado.",
-    excluded: "Autoexclusión activada.",
-    noHistory: "No hay transacciones."
-  }
 
+    saved:
+      "Guardado.",
+
+    excluded:
+      "Autoexclusión activada.",
+
+    noHistory:
+      "No hay transacciones.",
+
+    noEvents:
+      "No hay eventos abiertos.",
+
+    natcashUnavailable:
+      "NatCash requiere su API comercial oficial antes de activar transacciones reales.",
+
+    moncashLive:
+      "MonCash utiliza el modo configurado en el servidor MystroParyaj."
+  }
 };
 
 
 // =====================================================
-// TRANSLATION HELPER
+// TRANSLATION
 // =====================================================
 
 function tr(key) {
@@ -757,51 +1750,65 @@ const SPORTS = [
 
 
 // =====================================================
-// DEMO EVENTS
-// Do not present as live data.
+// HELPERS
 // =====================================================
 
-const EVENTS = [
-  {
-    id: "demo-football-1",
-    sport: "football",
-    league: "Demo League",
-    time: "18:30",
-    home: "Aquila FC",
-    away: "Cap Sud",
-    markets: [
-      ["1", 1.95],
-      ["X", 3.20],
-      ["2", 2.70]
-    ]
-  },
+function escapeHtml(value = "") {
 
-  {
-    id: "demo-basket-1",
-    sport: "basketball",
-    league: "Demo Basket",
-    time: "19:15",
-    home: "Tigers",
-    away: "Stars",
-    markets: [
-      ["1", 1.72],
-      ["2", 2.05]
-    ]
-  },
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
-  {
-    id: "demo-tennis-1",
-    sport: "tennis",
-    league: "Demo Open",
-    time: "17:45",
-    home: "Player A",
-    away: "Player B",
-    markets: [
-      ["1", 1.62],
-      ["2", 2.22]
-    ]
-  }
-];
+
+function money(
+  amount,
+  currency = state.currency
+) {
+
+  return (
+    Number(amount || 0)
+      .toLocaleString(
+        undefined,
+        {
+          maximumFractionDigits: 2
+        }
+      ) +
+    " " +
+    currency
+  );
+}
+
+
+let toastTimer = null;
+
+
+function toast(message) {
+
+  const element = $("#toast");
+
+  if (!element) return;
+
+  element.textContent =
+    message;
+
+  element.classList.add("show");
+
+  clearTimeout(toastTimer);
+
+  toastTimer =
+    setTimeout(
+      () => {
+        element.classList.remove(
+          "show"
+        );
+      },
+      2800
+    );
+}
 
 
 // =====================================================
@@ -809,33 +1816,50 @@ const EVENTS = [
 // =====================================================
 
 function selectionKey() {
+
   return (
     "mp_bets_" +
     (state.user?.uid || "guest")
   );
 }
 
+
 function loadSelections() {
+
   try {
+
     state.selections =
       JSON.parse(
-        localStorage.getItem(selectionKey()) ||
-        "[]"
+        localStorage.getItem(
+          selectionKey()
+        ) || "[]"
       );
+
   } catch {
+
     state.selections = [];
   }
 }
 
+
 function saveSelections() {
+
   localStorage.setItem(
     selectionKey(),
-    JSON.stringify(state.selections)
+    JSON.stringify(
+      state.selections
+    )
   );
 }
 
+
 function savePreferences() {
-  localStorage.setItem("mp_lang", state.lang);
+
+  localStorage.setItem(
+    "mp_lang",
+    state.lang
+  );
+
   localStorage.setItem(
     "mp_currency",
     state.currency
@@ -844,59 +1868,22 @@ function savePreferences() {
 
 
 // =====================================================
-// DISPLAY MONEY
-// =====================================================
-
-function money(
-  amount,
-  currency = state.currency
-) {
-  return (
-    Number(amount || 0).toLocaleString(
-      undefined,
-      {
-        maximumFractionDigits: 2
-      }
-    ) +
-    " " +
-    currency
-  );
-}
-
-
-// =====================================================
-// TOAST
-// =====================================================
-
-let toastTimer = null;
-
-function toast(message) {
-  const el = $("#toast");
-
-  if (!el) return;
-
-  el.textContent = message;
-  el.classList.add("show");
-
-  clearTimeout(toastTimer);
-
-  toastTimer =
-    setTimeout(() => {
-      el.classList.remove("show");
-    }, 2600);
-}
-
-
-// =====================================================
 // MODALS
 // =====================================================
 
 function openModal(id) {
-  $("#" + id)?.classList.add("open");
+
+  $("#" + id)?.classList.add(
+    "open"
+  );
 }
 
+
 function closeModal(id) {
-  $("#" + id)?.classList.remove("open");
+
+  $("#" + id)?.classList.remove(
+    "open"
+  );
 }
 
 
@@ -905,23 +1892,35 @@ function closeModal(id) {
 // =====================================================
 
 function openSidebar() {
-  $("#sidebar")?.classList.add("open");
-  $("#sidebarOverlay")?.classList.add("open");
 
-  $("#menuBtn")?.setAttribute(
-    "aria-expanded",
-    "true"
+  $("#sidebar")?.classList.add(
+    "open"
   );
+
+  $("#sidebarOverlay")
+    ?.classList.add("open");
+
+  $("#menuBtn")
+    ?.setAttribute(
+      "aria-expanded",
+      "true"
+    );
 }
 
-function closeSidebar() {
-  $("#sidebar")?.classList.remove("open");
-  $("#sidebarOverlay")?.classList.remove("open");
 
-  $("#menuBtn")?.setAttribute(
-    "aria-expanded",
-    "false"
-  );
+function closeSidebar() {
+
+  $("#sidebar")
+    ?.classList.remove("open");
+
+  $("#sidebarOverlay")
+    ?.classList.remove("open");
+
+  $("#menuBtn")
+    ?.setAttribute(
+      "aria-expanded",
+      "false"
+    );
 }
 
 
@@ -935,6 +1934,7 @@ function showPage(pageName) {
     pageName === "admin" &&
     !state.isAdmin
   ) {
+    toast("Accès refusé.");
     return;
   }
 
@@ -942,22 +1942,28 @@ function showPage(pageName) {
     pageName === "agent" &&
     !state.isAgent
   ) {
+    toast("Accès refusé.");
     return;
   }
 
   $$(".page").forEach(page => {
+
     page.classList.toggle(
       "active",
-      page.id === `page-${pageName}`
+      page.id ===
+        `page-${pageName}`
     );
   });
 
-  $$(".nav-link").forEach(button => {
-    button.classList.toggle(
-      "active",
-      button.dataset.page === pageName
-    );
-  });
+  $$(".nav-link")
+    .forEach(button => {
+
+      button.classList.toggle(
+        "active",
+        button.dataset.page ===
+          pageName
+      );
+    });
 
   closeSidebar();
 
@@ -965,6 +1971,20 @@ function showPage(pageName) {
     top: 0,
     behavior: "smooth"
   });
+
+  if (
+    pageName === "admin" &&
+    state.isAdmin
+  ) {
+    loadAdmin();
+  }
+
+  if (
+    pageName === "agent" &&
+    state.isAgent
+  ) {
+    loadAgentDashboard();
+  }
 }
 
 
@@ -977,27 +1997,34 @@ function applyLanguage() {
   document.documentElement.lang =
     state.lang;
 
-  $$("[data-i18n]").forEach(el => {
-    el.textContent =
-      tr(el.dataset.i18n);
-  });
+  $$("[data-i18n]")
+    .forEach(element => {
+
+      element.textContent =
+        tr(
+          element.dataset.i18n
+        );
+    });
 
   $$("[data-i18n-placeholder]")
-    .forEach(el => {
-      el.placeholder =
+    .forEach(element => {
+
+      element.placeholder =
         tr(
-          el.dataset.i18nPlaceholder
+          element.dataset
+            .i18nPlaceholder
         );
     });
 
   if ($("#languageSelect")) {
+
     $("#languageSelect").value =
       state.lang;
   }
 
   if ($("#profileLanguage")) {
 
-    const labels = {
+    const names = {
       ht: "Kreyòl",
       fr: "Français",
       en: "English",
@@ -1005,7 +2032,7 @@ function applyLanguage() {
     };
 
     $("#profileLanguage").value =
-      labels[state.lang];
+      names[state.lang];
   }
 
   renderEverything();
@@ -1022,29 +2049,45 @@ function firebaseError(error) {
     error?.code || "";
 
   if (
-    code.includes("email-already-in-use")
+    code.includes(
+      "email-already-in-use"
+    )
   ) {
     return tr("emailUsed");
   }
 
   if (
-    code.includes("invalid-email")
+    code.includes(
+      "invalid-email"
+    )
   ) {
     return tr("invalidEmail");
   }
 
   if (
-    code.includes("weak-password")
+    code.includes(
+      "weak-password"
+    )
   ) {
-    return tr("invalidPassword");
+    return tr(
+      "invalidPassword"
+    );
   }
 
   if (
-    code.includes("invalid-credential") ||
-    code.includes("wrong-password") ||
-    code.includes("user-not-found")
+    code.includes(
+      "invalid-credential"
+    ) ||
+    code.includes(
+      "wrong-password"
+    ) ||
+    code.includes(
+      "user-not-found"
+    )
   ) {
-    return tr("invalidCredentials");
+    return tr(
+      "invalidCredentials"
+    );
   }
 
   return (
@@ -1055,29 +2098,99 @@ function firebaseError(error) {
 
 
 // =====================================================
-// REGISTRATION
+// API
+// =====================================================
+
+async function apiFetch(
+  path,
+  options = {}
+) {
+
+  let token = "";
+
+  if (auth.currentUser) {
+
+    token =
+      await auth.currentUser
+        .getIdToken();
+  }
+
+  const response =
+    await fetch(
+      API_BASE + path,
+      {
+        method:
+          options.method ||
+          "GET",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+
+          ...(token
+            ? {
+                Authorization:
+                  `Bearer ${token}`
+              }
+            : {})
+        },
+
+        body:
+          options.body
+            ? JSON.stringify(
+                options.body
+              )
+            : undefined
+      }
+    );
+
+  const data =
+    await response
+      .json()
+      .catch(() => ({}));
+
+  if (!response.ok) {
+
+    throw new Error(
+      data.error ||
+      data.message ||
+      `HTTP ${response.status}`
+    );
+  }
+
+  return data;
+}
+
+
+// =====================================================
+// REGISTER
 // =====================================================
 
 async function registerUser() {
 
   const email =
-    $("#authEmail")?.value.trim() || "";
+    $("#authEmail")
+      ?.value.trim() || "";
 
   const password =
-    $("#authPassword")?.value || "";
+    $("#authPassword")
+      ?.value || "";
 
   const ageAccepted =
-    $("#ageCheck")?.checked === true;
+    $("#ageCheck")
+      ?.checked === true;
 
   const accountChoice =
     document.querySelector(
       'input[name="accountType"]:checked'
-    )?.value || "player";
+    )?.value ||
+    "player";
 
   const status =
     $("#authStatus");
 
   if (!ageAccepted) {
+
     status.textContent =
       tr("ageRequired");
 
@@ -1087,7 +2200,10 @@ async function registerUser() {
     return;
   }
 
-  if (!email.includes("@")) {
+  if (
+    !email.includes("@")
+  ) {
+
     status.textContent =
       tr("invalidEmail");
 
@@ -1097,7 +2213,10 @@ async function registerUser() {
     return;
   }
 
-  if (password.length < 6) {
+  if (
+    password.length < 6
+  ) {
+
     status.textContent =
       tr("invalidPassword");
 
@@ -1107,12 +2226,10 @@ async function registerUser() {
     return;
   }
 
-  const button =
-    $("#emailRegisterBtn");
-
   try {
 
-    button.disabled = true;
+    $("#emailRegisterBtn")
+      .disabled = true;
 
     await registerWithEmail(
       email,
@@ -1122,11 +2239,30 @@ async function registerUser() {
 
     status.textContent =
       accountChoice === "agent"
-        ? tr("agentRequestCreated")
+        ? tr("agentStart")
         : tr("accountCreated");
 
     status.className =
       "status success";
+
+    setTimeout(
+      () => {
+
+        closeModal(
+          "authModal"
+        );
+
+        if (
+          accountChoice ===
+          "agent"
+        ) {
+          showPage(
+            "agent-request"
+          );
+        }
+      },
+      700
+    );
 
   } catch (error) {
 
@@ -1138,7 +2274,8 @@ async function registerUser() {
 
   } finally {
 
-    button.disabled = false;
+    $("#emailRegisterBtn")
+      .disabled = false;
   }
 }
 
@@ -1150,15 +2287,18 @@ async function registerUser() {
 async function loginUser() {
 
   const email =
-    $("#authEmail")?.value.trim() || "";
+    $("#authEmail")
+      ?.value.trim() || "";
 
   const password =
-    $("#authPassword")?.value || "";
+    $("#authPassword")
+      ?.value || "";
 
   const status =
     $("#authStatus");
 
   if (!email.includes("@")) {
+
     status.textContent =
       tr("invalidEmail");
 
@@ -1169,6 +2309,7 @@ async function loginUser() {
   }
 
   if (password.length < 6) {
+
     status.textContent =
       tr("invalidPassword");
 
@@ -1180,8 +2321,8 @@ async function loginUser() {
 
   try {
 
-    $("#emailLoginBtn").disabled =
-      true;
+    $("#emailLoginBtn")
+      .disabled = true;
 
     await loginWithEmail(
       email,
@@ -1194,9 +2335,13 @@ async function loginUser() {
     status.className =
       "status success";
 
-    setTimeout(() => {
-      closeModal("authModal");
-    }, 600);
+    setTimeout(
+      () =>
+        closeModal(
+          "authModal"
+        ),
+      500
+    );
 
   } catch (error) {
 
@@ -1208,25 +2353,27 @@ async function loginUser() {
 
   } finally {
 
-    $("#emailLoginBtn").disabled =
-      false;
+    $("#emailLoginBtn")
+      .disabled = false;
   }
 }
 
 
 // =====================================================
-// PASSWORD RESET
+// RESET PASSWORD
 // =====================================================
 
 async function forgotPassword() {
 
   const email =
-    $("#authEmail")?.value.trim() || "";
+    $("#authEmail")
+      ?.value.trim() || "";
 
   const status =
     $("#authStatus");
 
   if (!email.includes("@")) {
+
     status.textContent =
       tr("invalidEmail");
 
@@ -1258,92 +2405,133 @@ async function forgotPassword() {
 
 
 // =====================================================
-// PROFILE
+// SESSION DATA
 // =====================================================
 
-async function loadProfile() {
-
-  state.profile = null;
+async function loadSessionData() {
 
   if (!state.user) {
+
+    state.me = null;
+
+    state.isAdmin =
+      false;
+
+    state.isAgent =
+      false;
+
+    state.wallet = {
+      balances: {
+        HTG: 0,
+        USD: 0,
+        EUR: 0,
+        CAD: 0,
+        DOP: 0
+      }
+    };
+
+    state.history = [];
+    state.bets = [];
+
     return;
   }
 
-  try {
+  const [
+    me,
+    wallet,
+    history,
+    bets
+  ] =
+    await Promise.all([
+      apiFetch("/api/me"),
+      apiFetch("/api/wallet"),
+      apiFetch("/api/history"),
+      apiFetch("/api/bets")
+    ]);
 
-    const snap =
-      await getDoc(
-        doc(
-          db,
-          "users",
-          state.user.uid
-        )
-      );
+  state.me = me;
 
-    if (snap.exists()) {
-      state.profile =
-        snap.data();
-    }
+  state.isAdmin =
+    me.role === "admin";
 
-  } catch (error) {
-    console.error(error);
-  }
+  state.isAgent =
+    me.role === "agent" &&
+    me.agentStatus ===
+      "approved";
+
+  state.wallet =
+    wallet || {
+      balances: {}
+    };
+
+  state.history =
+    history.items || [];
+
+  state.bets =
+    bets.items || [];
+
+  state.agentRequest =
+    me.agentRequest ||
+    null;
 }
 
 
 // =====================================================
-// CUSTOM CLAIMS
+// ROLE UI
 // =====================================================
 
-async function loadPermissions(user) {
+function updateRoleUI() {
 
-  state.isAdmin = false;
-  state.isAgent = false;
+  $$(".admin-only")
+    .forEach(element => {
 
-  if (user) {
+      element.hidden =
+        !state.isAdmin;
+    });
 
-    try {
+  $$(".agent-only")
+    .forEach(element => {
 
-      const tokenResult =
-        await user.getIdTokenResult(
-          true
-        );
+      element.hidden =
+        !state.isAgent;
+    });
 
-      state.isAdmin =
-        tokenResult.claims.admin === true;
+  const wantsAgent =
+    state.me
+      ?.requestedAccountType ===
+        "agent" ||
+    (
+      state.me
+        ?.agentRequestStatus &&
+      state.me
+        ?.agentRequestStatus !==
+        "none"
+    );
 
-      state.isAgent =
-        tokenResult.claims.agent === true;
+  $$(".agent-request-link")
+    .forEach(element => {
 
-    } catch (error) {
-      console.error(error);
-    }
-  }
+      element.hidden =
+        !state.user ||
+        state.isAgent ||
+        !wantsAgent;
+    });
 
-  $$(".admin-only").forEach(el => {
-    el.hidden =
-      !state.isAdmin;
-  });
-
-  $$(".agent-only").forEach(el => {
-    el.hidden =
-      !state.isAgent;
-  });
-}
-
-
-// =====================================================
-// AUTH DISPLAY
-// =====================================================
-
-function updateProfileUI() {
+  $("#logoutBtn")
+    ?.classList.toggle(
+      "hidden",
+      !state.user
+    );
 
   if ($("#profileEmail")) {
+
     $("#profileEmail").value =
-      state.user?.email || "—";
+      state.user?.email ||
+      "—";
   }
 
   if ($("#profileCurrency")) {
+
     $("#profileCurrency").value =
       state.currency;
   }
@@ -1351,31 +2539,91 @@ function updateProfileUI() {
   if ($("#profileAccountType")) {
 
     let accountLabel =
-      tr("player");
+      tr("playerAccount");
 
     if (state.isAgent) {
+
       accountLabel =
-        tr("agent");
+        tr("agentAccount");
     }
 
     else if (
-      state.profile?.requestedAccountType ===
-        "agent" &&
-      state.profile?.agentRequestStatus ===
+      state.me
+        ?.agentRequestStatus ===
         "pending"
     ) {
+
       accountLabel =
-        tr("agentPending");
+        state.lang === "fr"
+          ? "Demande agent en attente"
+          : state.lang === "en"
+            ? "Agent request pending"
+            : state.lang === "es"
+              ? "Solicitud de agente pendiente"
+              : "Demann ajan an ap tann";
+    }
+
+    else if (
+      state.me
+        ?.agentRequestStatus ===
+        "rejected"
+    ) {
+
+      accountLabel =
+        state.lang === "fr"
+          ? "Demande agent refusée"
+          : state.lang === "en"
+            ? "Agent request rejected"
+            : state.lang === "es"
+              ? "Solicitud de agente rechazada"
+              : "Demann ajan refize";
     }
 
     $("#profileAccountType").value =
       accountLabel;
   }
 
-  $("#logoutBtn")?.classList.toggle(
-    "hidden",
-    !state.user
-  );
+  if ($("#linkedAgentInfo")) {
+
+    $("#linkedAgentInfo")
+      .textContent =
+        state.me
+          ?.linkedAgentCode
+          ? `Agent: ${
+              state.me
+                .linkedAgentCode
+            }`
+          : "";
+  }
+
+  if ($("#agentLinkArea")) {
+
+    $("#agentLinkArea")
+      .style.display =
+        state.isAgent
+          ? "none"
+          : "block";
+  }
+
+  if ($("#depositLimit")) {
+
+    $("#depositLimit").value =
+      state.me
+        ?.limits
+        ?.dailyDeposit ??
+      5000;
+  }
+
+  if ($("#betLimit")) {
+
+    $("#betLimit").value =
+      state.me
+        ?.limits
+        ?.dailyBet ??
+      3000;
+  }
+
+  renderAgentRequestStatus();
 }
 
 
@@ -1383,19 +2631,32 @@ function updateProfileUI() {
 // AUTH WATCHER
 // =====================================================
 
-watchAuth(async user => {
+watchAuth(
+  async user => {
 
-  state.user =
-    user || null;
+    state.user =
+      user || null;
 
-  await loadPermissions(user);
-  await loadProfile();
+    loadSelections();
 
-  loadSelections();
+    try {
 
-  updateProfileUI();
-  renderEverything();
-});
+      await loadSessionData();
+
+    } catch (error) {
+
+      console.error(error);
+
+      toast(
+        error.message
+      );
+    }
+
+    updateRoleUI();
+
+    renderEverything();
+  }
+);
 
 
 // =====================================================
@@ -1407,79 +2668,16 @@ async function logout() {
   await logoutUser();
 
   state.user = null;
-  state.profile = null;
 
-  state.isAdmin = false;
-  state.isAgent = false;
-
-  state.history = [];
+  await loadSessionData();
 
   loadSelections();
 
+  updateRoleUI();
+
   showPage("home");
+
   renderEverything();
-}
-
-
-// =====================================================
-// API FETCH
-// =====================================================
-
-async function apiFetch(
-  path,
-  options = {}
-) {
-
-  let token = "";
-
-  if (auth.currentUser) {
-    token =
-      await auth.currentUser
-        .getIdToken();
-  }
-
-  const response =
-    await fetch(
-      API_BASE + path,
-      {
-        method:
-          options.method || "GET",
-
-        headers: {
-          "Content-Type":
-            "application/json",
-
-          ...(token
-            ? {
-                Authorization:
-                  `Bearer ${token}`
-              }
-            : {})
-        },
-
-        body:
-          options.body
-            ? JSON.stringify(
-                options.body
-              )
-            : undefined
-      }
-    );
-
-  const data =
-    await response
-      .json()
-      .catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(
-      data.error ||
-      data.message ||
-      `HTTP ${response.status}`
-    );
-  }
-
-  return data;
 }
 
 
@@ -1496,14 +2694,25 @@ async function loadRates() {
         "/api/rates?base=USD"
       );
 
-    if (data.rates) {
-      state.rates =
-        data.rates;
+    state.rates =
+      data.rates || null;
 
-      calculateExchange();
+    if (
+      $("#environmentBadge")
+    ) {
+
+      $("#environmentBadge")
+        .textContent =
+          (
+            data.mode ||
+            "API"
+          ).toUpperCase();
     }
 
+    calculateExchange();
+
   } catch (error) {
+
     console.error(
       "Rates:",
       error
@@ -1513,53 +2722,33 @@ async function loadRates() {
 
 
 // =====================================================
-// EXCHANGE CALC
+// EVENTS
 // =====================================================
 
-function calculateExchange() {
+async function loadEvents() {
 
-  const amount =
-    Number(
-      $("#exchangeAmount")
-        ?.value || 0
+  try {
+
+    const data =
+      await apiFetch(
+        "/api/events"
+      );
+
+    state.events =
+      data.items || [];
+
+  } catch (error) {
+
+    console.error(
+      "Events:",
+      error
     );
 
-  const from =
-    $("#fromCurrency")?.value;
-
-  const to =
-    $("#toCurrency")?.value;
-
-  if (
-    !state.rates ||
-    !from ||
-    !to ||
-    !$("#exchangeResult")
-  ) {
-    return;
+    state.events = [];
   }
 
-  const fromRate =
-    state.rates[from];
-
-  const toRate =
-    state.rates[to];
-
-  if (
-    !fromRate ||
-    !toRate
-  ) {
-    return;
-  }
-
-  const amountUSD =
-    amount / fromRate;
-
-  const result =
-    amountUSD * toRate;
-
-  $("#exchangeResult").value =
-    result.toFixed(2);
+  renderEvents();
+  renderFeatured();
 }
 
 
@@ -1587,31 +2776,40 @@ function renderCategories() {
           data-sport="${id}"
         >
           <span>${icon}</span>
-          <strong>${label}</strong>
+          <strong>
+            ${escapeHtml(label)}
+          </strong>
         </button>
       `
     ).join("");
 
-  $$(".category").forEach(button => {
+  $$(".category")
+    .forEach(button => {
 
-    button.onclick =
-      () => {
+      button.onclick =
+        () => {
 
-        state.sport =
-          button.dataset.sport;
+          state.sport =
+            button.dataset.sport;
 
-        renderCategories();
-        renderEvents();
-      };
-  });
+          renderCategories();
+
+          renderEvents();
+        };
+    });
 }
 
 
 // =====================================================
-// EVENT CARD
+// EVENT HTML
 // =====================================================
 
 function eventHtml(event) {
+
+  const markets =
+    Object.entries(
+      event.markets || {}
+    );
 
   return `
     <article class="event">
@@ -1619,32 +2817,43 @@ function eventHtml(event) {
       <div>
 
         <div class="event-meta">
-          ${event.league}
+          ${escapeHtml(
+            event.league || ""
+          )}
           •
-          ${event.time}
+          ${escapeHtml(
+            event.startLabel ||
+            event.startTime ||
+            ""
+          )}
         </div>
 
         <h3>
-          ${event.home}
+          ${escapeHtml(
+            event.home || ""
+          )}
           —
-          ${event.away}
+          ${escapeHtml(
+            event.away || ""
+          )}
         </h3>
 
       </div>
 
       <div class="odds">
 
-        ${event.markets.map(
-          ([label, odd]) => {
+        ${markets.map(
+          ([market, odd]) => {
 
             const selected =
-              state.selections.some(
-                item =>
-                  item.eventId ===
-                    event.id &&
-                  item.label ===
-                    label
-              );
+              state.selections
+                .some(
+                  item =>
+                    item.eventId ===
+                      event.id &&
+                    item.market ===
+                      market
+                );
 
             return `
               <button
@@ -1654,13 +2863,28 @@ function eventHtml(event) {
                     ? "selected"
                     : ""
                 }"
-                data-event="${event.id}"
-                data-label="${label}"
-                data-odd="${odd}"
+                data-event="${
+                  escapeHtml(
+                    event.id
+                  )
+                }"
+                data-market="${
+                  escapeHtml(
+                    market
+                  )
+                }"
               >
-                <small>${label}</small>
+                <small>
+                  ${escapeHtml(
+                    market
+                  )}
+                </small>
+
                 <strong>
-                  ${odd.toFixed(2)}
+                  ${
+                    Number(odd)
+                      .toFixed(2)
+                  }
                 </strong>
               </button>
             `;
@@ -1675,58 +2899,77 @@ function eventHtml(event) {
 
 
 // =====================================================
-// ODDS EVENTS
+// BIND ODDS
 // =====================================================
 
 function bindOdds() {
 
-  $$(".odd").forEach(button => {
+  $$(".odd")
+    .forEach(button => {
 
-    button.onclick =
-      () => {
+      button.onclick =
+        () => {
 
-        const event =
-          EVENTS.find(
-            e =>
-              e.id ===
-              button.dataset.event
-          );
+          const event =
+            state.events.find(
+              item =>
+                item.id ===
+                button.dataset.event
+            );
 
-        if (!event) return;
+          if (!event) return;
 
-        state.selections =
-          state.selections.filter(
-            item =>
-              item.eventId !==
-              event.id
-          );
+          const market =
+            button.dataset.market;
 
-        state.selections.push({
-          eventId: event.id,
-          label:
-            button.dataset.label,
-          odd:
+          const odd =
             Number(
-              button.dataset.odd
-            ),
-          title:
-            `${event.home} — ${event.away}`
-        });
+              event.markets
+                ?.[market]
+            );
 
-        saveSelections();
+          if (
+            !Number.isFinite(odd)
+          ) {
+            return;
+          }
 
-        renderEverything();
+          state.selections =
+            state.selections
+              .filter(
+                item =>
+                  item.eventId !==
+                  event.id
+              );
 
-        toast(
-          tr("selectionAdded")
-        );
-      };
-  });
+          state.selections.push({
+            eventId:
+              event.id,
+
+            market,
+
+            odd,
+
+            title:
+              `${event.home} — ${event.away}`
+          });
+
+          saveSelections();
+
+          renderEverything();
+
+          toast(
+            tr(
+              "selectionAdded"
+            )
+          );
+        };
+    });
 }
 
 
 // =====================================================
-// EVENTS
+// RENDER EVENTS
 // =====================================================
 
 function renderEvents() {
@@ -1736,30 +2979,30 @@ function renderEvents() {
 
   if (!box) return;
 
-  let list =
-    EVENTS.filter(
-      e =>
-        e.sport ===
-        state.sport
-    );
-
   const search =
     (
-      $("#eventSearch")?.value ||
-      ""
-    ).toLowerCase();
+      $("#eventSearch")
+        ?.value || ""
+    )
+      .trim()
+      .toLowerCase();
+
+  let list =
+    state.events.filter(
+      event =>
+        event.sport ===
+          state.sport &&
+        event.status ===
+          "open"
+    );
 
   if (search) {
 
     list =
       list.filter(
-        e =>
+        event =>
           (
-            e.home +
-            " " +
-            e.away +
-            " " +
-            e.league
+            `${event.home} ${event.away} ${event.league}`
           )
             .toLowerCase()
             .includes(search)
@@ -1771,7 +3014,9 @@ function renderEvents() {
       ? list
           .map(eventHtml)
           .join("")
-      : `<p>—</p>`;
+      : `<p>${
+          tr("noEvents")
+        }</p>`;
 
   bindOdds();
 }
@@ -1788,10 +3033,23 @@ function renderFeatured() {
 
   if (!box) return;
 
+  const events =
+    state.events
+      .filter(
+        item =>
+          item.status ===
+          "open"
+      )
+      .slice(0, 3);
+
   box.innerHTML =
-    EVENTS.slice(0, 3)
-      .map(eventHtml)
-      .join("");
+    events.length
+      ? events
+          .map(eventHtml)
+          .join("")
+      : `<p>${
+          tr("noEvents")
+        }</p>`;
 
   bindOdds();
 }
@@ -1808,39 +3066,55 @@ function renderBetslip() {
 
   if (!box) return;
 
-  if (!state.selections.length) {
+  if (
+    !state.selections.length
+  ) {
+
     box.innerHTML =
-      `<p>${tr("emptyTicket")}</p>`;
+      `<p>${
+        tr("emptyTicket")
+      }</p>`;
+
   } else {
 
     box.innerHTML =
-      state.selections.map(
-        (item, index) => `
-          <div class="bet-row">
+      state.selections
+        .map(
+          (item, index) => `
+            <div class="event">
 
-            <strong>
-              ${item.title}
-            </strong>
+              <div>
+                <strong>
+                  ${escapeHtml(
+                    item.title
+                  )}
+                </strong>
 
-            <p>
-              ${item.label}
-              •
-              ${Number(
-                item.odd
-              ).toFixed(2)}
-            </p>
+                <p>
+                  ${escapeHtml(
+                    item.market
+                  )}
+                  •
+                  ${
+                    Number(
+                      item.odd
+                    ).toFixed(2)
+                  }
+                </p>
+              </div>
 
-            <button
-              type="button"
-              class="remove-bet"
-              data-index="${index}"
-            >
-              ×
-            </button>
+              <button
+                type="button"
+                class="danger remove-bet"
+                data-index="${index}"
+              >
+                ×
+              </button>
 
-          </div>
-        `
-      ).join("");
+            </div>
+          `
+        )
+        .join("");
   }
 
   $$(".remove-bet")
@@ -1887,13 +3161,19 @@ function updateBetCalculation() {
     );
 
   if ($("#totalOdds")) {
-    $("#totalOdds").textContent =
-      odds.toFixed(2);
+
+    $("#totalOdds")
+      .textContent =
+        odds.toFixed(2);
   }
 
   if ($("#potentialReturn")) {
-    $("#potentialReturn").textContent =
-      money(stake * odds);
+
+    $("#potentialReturn")
+      .textContent =
+        money(
+          stake * odds
+        );
   }
 }
 
@@ -1905,64 +3185,93 @@ function updateBetCalculation() {
 async function placeBet() {
 
   if (!state.user) {
-    openModal("authModal");
-    toast(tr("loginRequired"));
+
+    openModal(
+      "authModal"
+    );
+
+    toast(
+      tr(
+        "loginRequired"
+      )
+    );
+
     return;
   }
 
-  if (!state.selections.length) {
-    toast(tr("emptyTicket"));
+  if (
+    !state.selections.length
+  ) {
+
+    toast(
+      tr(
+        "emptyTicket"
+      )
+    );
+
     return;
   }
 
   const stake =
     Number(
-      $("#stakeInput")?.value
+      $("#stakeInput")
+        ?.value
     );
 
   if (
     !Number.isFinite(stake) ||
     stake <= 0
   ) {
-    toast(tr("invalidAmount"));
+
+    toast(
+      tr(
+        "invalidAmount"
+      )
+    );
+
     return;
   }
 
   try {
 
-    $("#placeBetBtn").disabled =
-      true;
+    $("#placeBetBtn")
+      .disabled = true;
 
     const response =
       await apiFetch(
         "/api/bet",
         {
-          method: "POST",
+          method:
+            "POST",
 
           body: {
             stake,
+
             currency:
               state.currency,
 
             selections:
-              state.selections.map(
-                item => ({
-                  eventId:
-                    item.eventId,
+              state.selections
+                .map(
+                  item => ({
+                    eventId:
+                      item.eventId,
 
-                  market:
-                    item.label,
-
-                  odd:
-                    item.odd
-                })
-              )
+                    market:
+                      item.market
+                  })
+                )
           }
         }
       );
 
     state.selections = [];
+
     saveSelections();
+
+    await loadSessionData();
+
+    updateRoleUI();
 
     renderEverything();
 
@@ -1973,13 +3282,257 @@ async function placeBet() {
 
   } catch (error) {
 
-    toast(error.message);
+    toast(
+      error.message
+    );
 
   } finally {
 
-    $("#placeBetBtn").disabled =
-      false;
+    $("#placeBetBtn")
+      .disabled = false;
   }
+}
+
+
+// =====================================================
+// BALANCES
+// =====================================================
+
+function renderBalances() {
+
+  const balances =
+    state.wallet
+      ?.balances || {};
+
+  const amount =
+    Number(
+      balances[
+        state.currency
+      ] || 0
+    );
+
+  if ($("#balanceValue")) {
+
+    $("#balanceValue")
+      .textContent =
+        money(amount);
+  }
+
+  if ($("#walletBalance")) {
+
+    $("#walletBalance")
+      .textContent =
+        money(amount);
+  }
+
+  if ($("#stakeCurrency")) {
+
+    $("#stakeCurrency")
+      .textContent =
+        state.currency;
+  }
+
+  if ($("#paymentCurrency")) {
+
+    $("#paymentCurrency")
+      .textContent =
+        state.currency;
+  }
+
+  if ($("#currencySelect")) {
+
+    $("#currencySelect").value =
+      state.currency;
+  }
+
+  if ($("#profileCurrency")) {
+
+    $("#profileCurrency").value =
+      state.currency;
+  }
+
+  if ($("#openBetsValue")) {
+
+    $("#openBetsValue")
+      .textContent =
+        state.bets
+          .filter(
+            item =>
+              item.status ===
+                "open" ||
+              item.status ===
+                "partially_settled"
+          )
+          .length;
+  }
+
+  if ($("#todayBetsValue")) {
+
+    const today =
+      new Date()
+        .toDateString();
+
+    $("#todayBetsValue")
+      .textContent =
+        state.bets
+          .filter(
+            item =>
+              item.createdAt &&
+              new Date(
+                item.createdAt
+              )
+                .toDateString() ===
+              today
+          )
+          .length;
+  }
+
+  if (
+    $("#transactionCountValue")
+  ) {
+
+    $("#transactionCountValue")
+      .textContent =
+        state.history.length;
+  }
+}
+
+
+// =====================================================
+// HISTORY
+// =====================================================
+
+function renderHistory() {
+
+  const body =
+    $("#historyBody");
+
+  if (!body) return;
+
+  const items = [
+
+    ...state.history.map(
+      item => ({
+        date:
+          item.createdAt,
+
+        type:
+          item.type,
+
+        details:
+          item.provider ||
+          item.reference ||
+          "",
+
+        amount:
+          item.amount,
+
+        currency:
+          item.currency,
+
+        status:
+          item.status
+      })
+    ),
+
+    ...state.bets.map(
+      item => ({
+        date:
+          item.createdAt,
+
+        type:
+          "bet",
+
+        details:
+          item.id,
+
+        amount:
+          item.stake,
+
+        currency:
+          item.currency,
+
+        status:
+          item.status
+      })
+    )
+  ];
+
+  items.sort(
+    (a, b) =>
+      new Date(
+        b.date || 0
+      ) -
+      new Date(
+        a.date || 0
+      )
+  );
+
+  if (!items.length) {
+
+    body.innerHTML = `
+      <tr>
+        <td colspan="5">
+          ${tr("noHistory")}
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  body.innerHTML =
+    items.map(
+      item => `
+        <tr>
+
+          <td>
+            ${
+              item.date
+                ? new Date(
+                    item.date
+                  )
+                    .toLocaleString()
+                : "—"
+            }
+          </td>
+
+          <td>
+            ${escapeHtml(
+              item.type
+            )}
+          </td>
+
+          <td>
+            ${escapeHtml(
+              item.details
+            )}
+          </td>
+
+          <td>
+            ${money(
+              item.amount,
+              item.currency
+            )}
+          </td>
+
+          <td>
+            <span
+              class="status-badge ${
+                escapeHtml(
+                  item.status
+                )
+              }"
+            >
+              ${escapeHtml(
+                item.status
+              )}
+            </span>
+          </td>
+
+        </tr>
+      `
+    ).join("");
 }
 
 
@@ -1990,14 +3543,24 @@ async function placeBet() {
 async function submitPayment() {
 
   if (!state.user) {
-    openModal("authModal");
-    toast(tr("loginRequired"));
+
+    openModal(
+      "authModal"
+    );
+
+    toast(
+      tr(
+        "loginRequired"
+      )
+    );
+
     return;
   }
 
   const amount =
     Number(
-      $("#paymentAmount")?.value
+      $("#paymentAmount")
+        ?.value
     );
 
   const phone =
@@ -2011,8 +3574,11 @@ async function submitPayment() {
     !Number.isFinite(amount) ||
     amount <= 0
   ) {
+
     status.textContent =
-      tr("invalidAmount");
+      tr(
+        "invalidAmount"
+      );
 
     status.className =
       "status error";
@@ -2022,17 +3588,25 @@ async function submitPayment() {
 
   try {
 
+    $("#paymentSubmit")
+      .disabled = true;
+
     status.textContent =
-      tr("paymentProcessing");
+      tr(
+        "paymentProcessing"
+      );
 
     status.className =
       "status";
 
-    const result =
+    const response =
       await apiFetch(
-        `/api/${state.paymentMode}`,
+        `/api/${
+          state.paymentMode
+        }`,
         {
-          method: "POST",
+          method:
+            "POST",
 
           body: {
             provider:
@@ -2048,18 +3622,26 @@ async function submitPayment() {
         }
       );
 
-    if (result.redirectUrl) {
+    if (
+      response.redirectUrl
+    ) {
+
       window.location.href =
-        result.redirectUrl;
+        response.redirectUrl;
 
       return;
     }
 
     status.textContent =
-      result.message || "OK";
+      response.message ||
+      "OK";
 
     status.className =
       "status success";
+
+    await loadSessionData();
+
+    renderEverything();
 
   } catch (error) {
 
@@ -2068,172 +3650,1156 @@ async function submitPayment() {
 
     status.className =
       "status error";
+
+  } finally {
+
+    $("#paymentSubmit")
+      .disabled = false;
   }
 }
 
 
 // =====================================================
-// BALANCE DISPLAY
+// PROVIDER MESSAGE
 // =====================================================
 
-function renderBalances() {
+function providerNotice() {
 
-  const amount =
-    state.balances[
-      state.currency
-    ] || 0;
+  const element =
+    $("#providerNotice");
 
-  $("#balanceValue") &&
-    ($("#balanceValue").textContent =
-      money(amount));
+  if (!element) return;
 
-  $("#walletBalance") &&
-    ($("#walletBalance").textContent =
-      money(amount));
+  if (
+    state.provider ===
+    "natcash"
+  ) {
 
-  $("#stakeCurrency") &&
-    ($("#stakeCurrency").textContent =
-      state.currency);
+    element.textContent =
+      tr(
+        "natcashUnavailable"
+      );
 
-  $("#paymentCurrency") &&
-    ($("#paymentCurrency").textContent =
-      state.currency);
+  } else {
 
-  $("#profileCurrency") &&
-    ($("#profileCurrency").value =
-      state.currency);
-
-  $("#currencySelect") &&
-    ($("#currencySelect").value =
-      state.currency);
-
-  $("#openBetsValue") &&
-    ($("#openBetsValue").textContent =
-      state.selections.length);
-
-  $("#todayBetsValue") &&
-    ($("#todayBetsValue").textContent =
-      "0");
-
-  $("#transactionCountValue") &&
-    ($("#transactionCountValue")
-      .textContent =
-      state.history.length);
+    element.textContent =
+      tr(
+        "moncashLive"
+      );
+  }
 }
 
 
 // =====================================================
-// HISTORY
+// EXCHANGE
 // =====================================================
 
-function renderHistory() {
+function calculateExchange() {
 
-  const body =
-    $("#historyBody");
+  const amount =
+    Number(
+      $("#exchangeAmount")
+        ?.value || 0
+    );
 
-  if (!body) return;
+  const from =
+    $("#fromCurrency")
+      ?.value;
 
-  if (!state.history.length) {
+  const to =
+    $("#toCurrency")
+      ?.value;
 
-    body.innerHTML = `
-      <tr>
-        <td colspan="5">
-          ${tr("noHistory")}
-        </td>
-      </tr>
-    `;
+  if (
+    !state.rates ||
+    !from ||
+    !to
+  ) {
+    return;
+  }
+
+  const fromRate =
+    Number(
+      state.rates[from]
+    );
+
+  const toRate =
+    Number(
+      state.rates[to]
+    );
+
+  if (
+    !fromRate ||
+    !toRate
+  ) {
+    return;
+  }
+
+  const amountUsd =
+    amount / fromRate;
+
+  const result =
+    amountUsd * toRate;
+
+  if ($("#exchangeResult")) {
+
+    $("#exchangeResult").value =
+      result.toFixed(2);
+  }
+}
+
+
+// =====================================================
+// EXECUTE EXCHANGE
+// =====================================================
+
+async function executeExchange() {
+
+  if (!state.user) {
+
+    openModal(
+      "authModal"
+    );
 
     return;
   }
 
-  body.innerHTML =
-    state.history.map(
-      item => `
-        <tr>
-          <td>${item.date}</td>
-          <td>${item.type}</td>
-          <td>${item.details}</td>
-          <td>
-            ${money(
-              item.amount,
-              item.currency
-            )}
-          </td>
-          <td>${item.status}</td>
-        </tr>
-      `
-    ).join("");
+  const amount =
+    Number(
+      $("#exchangeAmount")
+        ?.value
+    );
+
+  const from =
+    $("#fromCurrency")
+      ?.value;
+
+  const to =
+    $("#toCurrency")
+      ?.value;
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+
+    toast(
+      tr(
+        "invalidAmount"
+      )
+    );
+
+    return;
+  }
+
+  if (from === to) {
+
+    toast(
+      "Chwazi 2 lajan diferan."
+    );
+
+    return;
+  }
+
+  try {
+
+    $("#exchangeBtn")
+      .disabled = true;
+
+    const response =
+      await apiFetch(
+        "/api/exchange",
+        {
+          method:
+            "POST",
+
+          body: {
+            amount,
+            from,
+            to
+          }
+        }
+      );
+
+    await loadSessionData();
+
+    renderEverything();
+
+    calculateExchange();
+
+    toast(
+      response.message ||
+      "OK"
+    );
+
+  } catch (error) {
+
+    toast(
+      error.message
+    );
+
+  } finally {
+
+    $("#exchangeBtn")
+      .disabled = false;
+  }
 }
 
 
 // =====================================================
-// CHART
+// RESPONSIBLE GAMING LIMITS
 // =====================================================
 
-function renderChart() {
+async function saveLimits() {
 
-  const chart =
-    $("#barChart");
+  if (!state.user) {
 
-  if (!chart) return;
+    openModal(
+      "authModal"
+    );
 
-  const values =
-    [28, 45, 35, 62, 53, 75, 68];
+    return;
+  }
 
-  chart.innerHTML =
-    values.map(
-      (value, index) => `
-        <div class="bar-item">
-          <div
-            class="bar"
-            style="height:${value}%"
-          ></div>
-          <span>
-            ${index + 1}
-          </span>
-        </div>
-      `
-    ).join("");
+  const dailyDeposit =
+    Number(
+      $("#depositLimit")
+        ?.value || 0
+    );
+
+  const dailyBet =
+    Number(
+      $("#betLimit")
+        ?.value || 0
+    );
+
+  try {
+
+    await apiFetch(
+      "/api/limits",
+      {
+        method:
+          "POST",
+
+        body: {
+          dailyDeposit,
+          dailyBet
+        }
+      }
+    );
+
+    await loadSessionData();
+
+    updateRoleUI();
+
+    toast(
+      tr("saved")
+    );
+
+  } catch (error) {
+
+    toast(
+      error.message
+    );
+  }
 }
 
 
 // =====================================================
-// ALL RENDER
+// SELF EXCLUSION
+// =====================================================
+
+async function selfExclude() {
+
+  if (!state.user) {
+
+    openModal(
+      "authModal"
+    );
+
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Konfime oto-eksklizyon an?"
+    );
+
+  if (!confirmed) return;
+
+  try {
+
+    await apiFetch(
+      "/api/self-exclude",
+      {
+        method:
+          "POST",
+
+        body: {
+          enabled:
+            true
+        }
+      }
+    );
+
+    await loadSessionData();
+
+    updateRoleUI();
+
+    toast(
+      tr(
+        "excluded"
+      )
+    );
+
+  } catch (error) {
+
+    toast(
+      error.message
+    );
+  }
+}
+
+
+// =====================================================
+// AGENT REQUEST STATUS
+// =====================================================
+
+function renderAgentRequestStatus() {
+
+  const box =
+    $("#agentRequestStatusBox");
+
+  if (!box) return;
+
+  if (!state.user) {
+
+    box.textContent =
+      tr(
+        "loginRequired"
+      );
+
+    return;
+  }
+
+  const requestStatus =
+    state.me
+      ?.agentRequestStatus ||
+    "not_submitted";
+
+  const messages = {
+
+    not_submitted:
+      state.lang === "fr"
+        ? "La demande agent n'a pas encore été envoyée."
+        : state.lang === "en"
+          ? "Agent application has not been submitted yet."
+          : state.lang === "es"
+            ? "La solicitud de agente aún no ha sido enviada."
+            : "Demann ajan poko voye.",
+
+    pending:
+      state.lang === "fr"
+        ? "La demande agent est en cours de vérification."
+        : state.lang === "en"
+          ? "Agent application is pending verification."
+          : state.lang === "es"
+            ? "La solicitud de agente está en revisión."
+            : "Demann ajan an ap tann verifikasyon.",
+
+    approved:
+      state.lang === "fr"
+        ? "Le compte agent est approuvé."
+        : state.lang === "en"
+          ? "Agent account is approved."
+          : state.lang === "es"
+            ? "La cuenta de agente está aprobada."
+            : "Kont ajan an apwouve.",
+
+    rejected:
+      state.lang === "fr"
+        ? "La demande a été refusée. Vous pouvez corriger les informations et la soumettre à nouveau."
+        : state.lang === "en"
+          ? "The application was rejected. You can correct the information and resubmit it."
+          : state.lang === "es"
+            ? "La solicitud fue rechazada. Puedes corregirla y volver a enviarla."
+            : "Demann ajan an refize. Ou ka korije enfòmasyon yo epi re-soumèt."
+  };
+
+  box.innerHTML = `
+    <strong>
+      ${
+        escapeHtml(
+          messages[
+            requestStatus
+          ] ||
+          requestStatus
+        )
+      }
+    </strong>
+  `;
+}
+
+
+// =====================================================
+// SUBMIT AGENT REQUEST
+// =====================================================
+
+async function submitAgentRequest() {
+
+  if (!state.user) {
+
+    openModal(
+      "authModal"
+    );
+
+    return;
+  }
+
+  if (
+    !$("#agentTermsCheck")
+      ?.checked
+  ) {
+
+    toast(
+      "Aksepte kondisyon ajan yo."
+    );
+
+    return;
+  }
+
+  const body = {
+
+    fullName:
+      $("#agentFullName")
+        ?.value.trim(),
+
+    phone:
+      $("#agentPhone")
+        ?.value.trim(),
+
+    city:
+      $("#agentCity")
+        ?.value.trim(),
+
+    address:
+      $("#agentAddress")
+        ?.value.trim(),
+
+    idType:
+      $("#agentIdType")
+        ?.value,
+
+    idNumber:
+      $("#agentIdNumber")
+        ?.value.trim()
+  };
+
+  if (
+    !body.fullName ||
+    !body.phone ||
+    !body.city ||
+    !body.address ||
+    !body.idNumber
+  ) {
+
+    toast(
+      "Ranpli tout chan obligatwa yo."
+    );
+
+    return;
+  }
+
+  const status =
+    $("#agentRequestFormStatus");
+
+  try {
+
+    $("#submitAgentRequestBtn")
+      .disabled = true;
+
+    const response =
+      await apiFetch(
+        "/api/agent/apply",
+        {
+          method:
+            "POST",
+
+          body
+        }
+      );
+
+    status.textContent =
+      response.message ||
+      "OK";
+
+    status.className =
+      "status success";
+
+    await loadSessionData();
+
+    updateRoleUI();
+
+  } catch (error) {
+
+    status.textContent =
+      error.message;
+
+    status.className =
+      "status error";
+
+  } finally {
+
+    $("#submitAgentRequestBtn")
+      .disabled = false;
+  }
+}
+
+
+// =====================================================
+// LINK PLAYER TO AGENT
+// =====================================================
+
+async function linkAgent() {
+
+  if (!state.user) {
+
+    openModal(
+      "authModal"
+    );
+
+    return;
+  }
+
+  const code =
+    $("#agentCodeInput")
+      ?.value
+      .trim()
+      .toUpperCase();
+
+  if (!code) {
+
+    toast(
+      "Antre kòd ajan an."
+    );
+
+    return;
+  }
+
+  try {
+
+    $("#linkAgentBtn")
+      .disabled = true;
+
+    const response =
+      await apiFetch(
+        "/api/agent/link",
+        {
+          method:
+            "POST",
+
+          body: {
+            code
+          }
+        }
+      );
+
+    await loadSessionData();
+
+    updateRoleUI();
+
+    toast(
+      response.message ||
+      "OK"
+    );
+
+  } catch (error) {
+
+    toast(
+      error.message
+    );
+
+  } finally {
+
+    $("#linkAgentBtn")
+      .disabled = false;
+  }
+}
+
+
+// =====================================================
+// AGENT DASHBOARD
+// =====================================================
+
+async function loadAgentDashboard() {
+
+  if (!state.isAgent) return;
+
+  try {
+
+    const data =
+      await apiFetch(
+        "/api/agent/dashboard"
+      );
+
+    if ($("#agentCode")) {
+
+      $("#agentCode")
+        .textContent =
+          data.agentCode ||
+          "—";
+    }
+
+    if ($("#agentClients")) {
+
+      $("#agentClients")
+        .textContent =
+          data.players
+            ?.length || 0;
+    }
+
+    if ($("#agentCommission")) {
+
+      $("#agentCommission")
+        .textContent =
+          money(
+            data.commissionHTG ||
+            0,
+            "HTG"
+          );
+    }
+
+    if ($("#agentStatus")) {
+
+      $("#agentStatus")
+        .textContent =
+          data.status ||
+          "—";
+    }
+
+    const body =
+      $("#agentPlayersBody");
+
+    if (body) {
+
+      const players =
+        data.players || [];
+
+      body.innerHTML =
+        players.length
+          ? players
+              .map(
+                player => `
+                  <tr>
+                    <td>
+                      ${
+                        escapeHtml(
+                          player.email ||
+                          "—"
+                        )
+                      }
+                    </td>
+
+                    <td>
+                      ${
+                        player.linkedAt
+                          ? new Date(
+                              player.linkedAt
+                            )
+                              .toLocaleString()
+                          : "—"
+                      }
+                    </td>
+                  </tr>
+                `
+              )
+              .join("")
+          : `
+              <tr>
+                <td colspan="2">
+                  —
+                </td>
+              </tr>
+            `;
+    }
+
+  } catch (error) {
+
+    toast(
+      error.message
+    );
+  }
+}
+
+
+// =====================================================
+// ADMIN
+// =====================================================
+
+async function loadAdmin() {
+
+  if (!state.isAdmin) return;
+
+  try {
+
+    const dashboard =
+      await apiFetch(
+        "/api/admin/dashboard"
+      );
+
+    if ($("#adminStakes")) {
+
+      $("#adminStakes")
+        .textContent =
+          money(
+            dashboard
+              .totalStakesHTG ||
+            0,
+            "HTG"
+          );
+    }
+
+    if ($("#adminOpenBets")) {
+
+      $("#adminOpenBets")
+        .textContent =
+          dashboard
+            .openBets || 0;
+    }
+
+    if (
+      $("#adminTransactions")
+    ) {
+
+      $("#adminTransactions")
+        .textContent =
+          dashboard
+            .transactions || 0;
+    }
+
+    if ($("#adminUsers")) {
+
+      $("#adminUsers")
+        .textContent =
+          dashboard
+            .users || 0;
+    }
+
+
+    const requests =
+      await apiFetch(
+        "/api/admin/agent-requests"
+      );
+
+    const body =
+      $("#adminAgentRequestsBody");
+
+    if (body) {
+
+      const items =
+        requests.items || [];
+
+      body.innerHTML =
+        items.length
+          ? items
+              .map(
+                item => `
+                  <tr>
+
+                    <td>
+                      ${
+                        escapeHtml(
+                          item.email ||
+                          ""
+                        )
+                      }
+                    </td>
+
+                    <td>
+                      ${
+                        escapeHtml(
+                          item.fullName ||
+                          ""
+                        )
+                      }
+                    </td>
+
+                    <td>
+                      ${
+                        escapeHtml(
+                          item.city ||
+                          ""
+                        )
+                      }
+                    </td>
+
+                    <td>
+                      <span
+                        class="status-badge ${
+                          escapeHtml(
+                            item.status ||
+                            "pending"
+                          )
+                        }"
+                      >
+                        ${
+                          escapeHtml(
+                            item.status ||
+                            "pending"
+                          )
+                        }
+                      </span>
+                    </td>
+
+                    <td>
+
+                      <button
+                        type="button"
+                        class="primary small agent-approve"
+                        data-uid="${
+                          escapeHtml(
+                            item.uid
+                          )
+                        }"
+                      >
+                        ✓
+                      </button>
+
+                      <button
+                        type="button"
+                        class="danger small agent-reject"
+                        data-uid="${
+                          escapeHtml(
+                            item.uid
+                          )
+                        }"
+                      >
+                        ×
+                      </button>
+
+                    </td>
+
+                  </tr>
+                `
+              )
+              .join("")
+          : `
+              <tr>
+                <td colspan="5">
+                  —
+                </td>
+              </tr>
+            `;
+    }
+
+    $$(".agent-approve")
+      .forEach(button => {
+
+        button.onclick =
+          () =>
+            reviewAgent(
+              button.dataset.uid,
+              "approved"
+            );
+      });
+
+    $$(".agent-reject")
+      .forEach(button => {
+
+        button.onclick =
+          () =>
+            reviewAgent(
+              button.dataset.uid,
+              "rejected"
+            );
+      });
+
+  } catch (error) {
+
+    toast(
+      error.message
+    );
+  }
+}
+
+
+// =====================================================
+// REVIEW AGENT
+// =====================================================
+
+async function reviewAgent(
+  uid,
+  status
+) {
+
+  try {
+
+    await apiFetch(
+      "/api/admin/agent-review",
+      {
+        method:
+          "POST",
+
+        body: {
+          uid,
+          status
+        }
+      }
+    );
+
+    toast("OK");
+
+    await loadAdmin();
+
+  } catch (error) {
+
+    toast(
+      error.message
+    );
+  }
+}
+
+
+// =====================================================
+// ADMIN CREATE EVENT
+// =====================================================
+
+async function createEvent() {
+
+  if (!state.isAdmin) return;
+
+  const markets = {};
+
+  const raw =
+    $("#adminMarkets")
+      ?.value || "";
+
+  raw.split(",")
+    .forEach(item => {
+
+      const [
+        market,
+        odd
+      ] =
+        item.split(":");
+
+      const value =
+        Number(odd);
+
+      if (
+        market &&
+        Number.isFinite(value) &&
+        value > 1
+      ) {
+
+        markets[
+          market.trim()
+        ] =
+          value;
+      }
+    });
+
+  const body = {
+
+    sport:
+      $("#adminSport")
+        ?.value,
+
+    league:
+      $("#adminLeague")
+        ?.value.trim(),
+
+    home:
+      $("#adminHome")
+        ?.value.trim(),
+
+    away:
+      $("#adminAway")
+        ?.value.trim(),
+
+    startTime:
+      $("#adminStart")
+        ?.value,
+
+    markets
+  };
+
+  const status =
+    $("#adminEventStatus");
+
+  try {
+
+    $("#adminCreateEventBtn")
+      .disabled = true;
+
+    const response =
+      await apiFetch(
+        "/api/admin/events",
+        {
+          method:
+            "POST",
+
+          body
+        }
+      );
+
+    status.textContent =
+      response.message ||
+      response.id ||
+      "OK";
+
+    status.className =
+      "status success";
+
+    await loadEvents();
+
+  } catch (error) {
+
+    status.textContent =
+      error.message;
+
+    status.className =
+      "status error";
+
+  } finally {
+
+    $("#adminCreateEventBtn")
+      .disabled = false;
+  }
+}
+
+
+// =====================================================
+// ADMIN SETTLEMENT
+// =====================================================
+
+async function settleEvent() {
+
+  if (!state.isAdmin) return;
+
+  const eventId =
+    $("#settleEventId")
+      ?.value.trim();
+
+  const winningMarket =
+    $("#settleMarket")
+      ?.value.trim();
+
+  if (
+    !eventId ||
+    !winningMarket
+  ) {
+
+    toast(
+      "Antre Event ID ak mache gagnan an."
+    );
+
+    return;
+  }
+
+  const confirmed =
+    confirm(
+      "Konfime rezilta sa a? Aksyon sa ka kredite jwè ki genyen yo."
+    );
+
+  if (!confirmed) return;
+
+  const status =
+    $("#adminSettleStatus");
+
+  try {
+
+    $("#adminSettleBtn")
+      .disabled = true;
+
+    const response =
+      await apiFetch(
+        "/api/admin/settle",
+        {
+          method:
+            "POST",
+
+          body: {
+            eventId,
+            winningMarket
+          }
+        }
+      );
+
+    status.textContent =
+      response.message ||
+      "OK";
+
+    status.className =
+      "status success";
+
+    await loadEvents();
+
+    await loadAdmin();
+
+  } catch (error) {
+
+    status.textContent =
+      error.message;
+
+    status.className =
+      "status error";
+
+  } finally {
+
+    $("#adminSettleBtn")
+      .disabled = false;
+  }
+}
+
+
+// =====================================================
+// RENDER EVERYTHING
 // =====================================================
 
 function renderEverything() {
 
   renderCategories();
-  renderEvents();
-  renderFeatured();
-  renderBetslip();
-  renderBalances();
-  renderHistory();
-  renderChart();
 
-  updateProfileUI();
+  renderEvents();
+
+  renderFeatured();
+
+  renderBetslip();
+
+  renderBalances();
+
+  renderHistory();
+
+  updateRoleUI();
+
+  providerNotice();
 }
 
 
 // =====================================================
-// GENERAL EVENTS
+// MENU
 // =====================================================
 
-$("#menuBtn")?.addEventListener(
-  "click",
-  () => {
+$("#menuBtn")
+  ?.addEventListener(
+    "click",
+    () => {
 
-    if (
-      $("#sidebar")
-        ?.classList
-        .contains("open")
-    ) {
-      closeSidebar();
-    } else {
-      openSidebar();
+      if (
+        $("#sidebar")
+          ?.classList
+          .contains("open")
+      ) {
+
+        closeSidebar();
+
+      } else {
+
+        openSidebar();
+      }
     }
-  }
-);
+  );
 
 
 $("#sidebarOverlay")
@@ -2243,61 +4809,93 @@ $("#sidebarOverlay")
   );
 
 
-$$(".nav-link").forEach(button => {
+// =====================================================
+// NAV LINKS
+// =====================================================
 
-  button.addEventListener(
+$$(".nav-link")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        showPage(
+          button.dataset.page
+        );
+      }
+    );
+  });
+
+
+$$("[data-go]")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      event => {
+
+        event.preventDefault();
+
+        const page =
+          button.dataset.go;
+
+        if (page) {
+
+          showPage(page);
+        }
+      }
+    );
+  });
+
+
+$$("[data-close]")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        const modal =
+          button.dataset.close;
+
+        if (modal) {
+
+          closeModal(modal);
+        }
+      }
+    );
+  });
+
+
+// =====================================================
+// PROFILE BUTTON
+// =====================================================
+
+$("#loginBtn")
+  ?.addEventListener(
     "click",
     () => {
-      showPage(
-        button.dataset.page
-      );
+
+      if (state.user) {
+
+        showPage(
+          "profile"
+        );
+
+      } else {
+
+        openModal(
+          "authModal"
+        );
+      }
     }
   );
-});
 
 
-$$("[data-go]").forEach(button => {
-
-  button.addEventListener(
-    "click",
-    event => {
-
-      event.preventDefault();
-
-      showPage(
-        button.dataset.go
-      );
-    }
-  );
-});
-
-
-$$("[data-close]").forEach(button => {
-
-  button.addEventListener(
-    "click",
-    () => {
-
-      closeModal(
-        button.dataset.close
-      );
-    }
-  );
-});
-
-
-$("#loginBtn")?.addEventListener(
-  "click",
-  () => {
-
-    if (state.user) {
-      showPage("profile");
-    } else {
-      openModal("authModal");
-    }
-  }
-);
-
+// =====================================================
+// AUTH BUTTONS
+// =====================================================
 
 $("#emailRegisterBtn")
   ?.addEventListener(
@@ -2320,11 +4918,16 @@ $("#forgotPasswordBtn")
   );
 
 
-$("#logoutBtn")?.addEventListener(
-  "click",
-  logout
-);
+$("#logoutBtn")
+  ?.addEventListener(
+    "click",
+    logout
+  );
 
+
+// =====================================================
+// LANGUAGE
+// =====================================================
 
 $("#languageSelect")
   ?.addEventListener(
@@ -2335,10 +4938,15 @@ $("#languageSelect")
         event.target.value;
 
       savePreferences();
+
       applyLanguage();
     }
   );
 
+
+// =====================================================
+// CURRENCY
+// =====================================================
 
 $("#currencySelect")
   ?.addEventListener(
@@ -2349,10 +4957,15 @@ $("#currencySelect")
         event.target.value;
 
       savePreferences();
+
       renderEverything();
     }
   );
 
+
+// =====================================================
+// SEARCH
+// =====================================================
 
 $("#eventSearch")
   ?.addEventListener(
@@ -2360,6 +4973,10 @@ $("#eventSearch")
     renderEvents
   );
 
+
+// =====================================================
+// STAKE
+// =====================================================
 
 $("#stakeInput")
   ?.addEventListener(
@@ -2375,6 +4992,10 @@ $("#placeBetBtn")
   );
 
 
+// =====================================================
+// DEPOSIT / WITHDRAW TABS
+// =====================================================
+
 $("#depositTabBtn")
   ?.addEventListener(
     "click",
@@ -2383,8 +5004,17 @@ $("#depositTabBtn")
       state.paymentMode =
         "deposit";
 
-      $("#paymentFormTitle").textContent =
-        tr("deposit");
+      $("#paymentFormTitle")
+        .textContent =
+          tr("deposit");
+
+      $("#depositTabBtn")
+        .className =
+          "primary";
+
+      $("#withdrawTabBtn")
+        .className =
+          "secondary";
     }
   );
 
@@ -2397,34 +5027,51 @@ $("#withdrawTabBtn")
       state.paymentMode =
         "withdraw";
 
-      $("#paymentFormTitle").textContent =
-        tr("withdraw");
+      $("#paymentFormTitle")
+        .textContent =
+          tr("withdraw");
+
+      $("#withdrawTabBtn")
+        .className =
+          "primary";
+
+      $("#depositTabBtn")
+        .className =
+          "secondary";
     }
   );
 
 
-$$(".payment").forEach(button => {
+// =====================================================
+// PAYMENT PROVIDER
+// =====================================================
 
-  button.addEventListener(
-    "click",
-    () => {
+$$(".payment")
+  .forEach(button => {
 
-      $$(".payment")
-        .forEach(item =>
-          item.classList.remove(
-            "active"
-          )
+    button.addEventListener(
+      "click",
+      () => {
+
+        $$(".payment")
+          .forEach(item => {
+
+            item.classList.remove(
+              "active"
+            );
+          });
+
+        button.classList.add(
+          "active"
         );
 
-      button.classList.add(
-        "active"
-      );
+        state.provider =
+          button.dataset.provider;
 
-      state.provider =
-        button.dataset.provider;
-    }
-  );
-});
+        providerNotice();
+      }
+    );
+  });
 
 
 $("#paymentSubmit")
@@ -2433,6 +5080,10 @@ $("#paymentSubmit")
     submitPayment
   );
 
+
+// =====================================================
+// EXCHANGE
+// =====================================================
 
 $("#exchangeAmount")
   ?.addEventListener(
@@ -2466,14 +5117,21 @@ $("#swapCurrencies")
       const to =
         $("#toCurrency");
 
-      const old =
+      if (
+        !from ||
+        !to
+      ) {
+        return;
+      }
+
+      const oldValue =
         from.value;
 
       from.value =
         to.value;
 
       to.value =
-        old;
+        oldValue;
 
       calculateExchange();
     }
@@ -2483,64 +5141,194 @@ $("#swapCurrencies")
 $("#exchangeBtn")
   ?.addEventListener(
     "click",
-    calculateExchange
+    executeExchange
   );
 
+
+// =====================================================
+// LIMITS
+// =====================================================
 
 $("#limitsBtn")
   ?.addEventListener(
     "click",
     () =>
-      openModal("limitsModal")
+      openModal(
+        "limitsModal"
+      )
   );
 
 
 $("#saveLimitsBtn")
   ?.addEventListener(
     "click",
-    () => {
-
-      localStorage.setItem(
-        "mp_deposit_limit",
-        $("#depositLimit")?.value ||
-          "0"
-      );
-
-      localStorage.setItem(
-        "mp_bet_limit",
-        $("#betLimit")?.value ||
-          "0"
-      );
-
-      toast(tr("saved"));
-    }
+    saveLimits
   );
 
 
 $("#selfExcludeBtn")
   ?.addEventListener(
     "click",
-    () => {
-
-      localStorage.setItem(
-        "mp_self_excluded",
-        "1"
-      );
-
-      toast(tr("excluded"));
-    }
+    selfExclude
   );
 
 
 // =====================================================
-// START
+// AGENT
 // =====================================================
 
-$("#languageSelect").value =
-  state.lang;
+$("#submitAgentRequestBtn")
+  ?.addEventListener(
+    "click",
+    submitAgentRequest
+  );
 
-$("#currencySelect").value =
-  state.currency;
+
+$("#linkAgentBtn")
+  ?.addEventListener(
+    "click",
+    linkAgent
+  );
+
+
+// =====================================================
+// ADMIN
+// =====================================================
+
+$("#refreshAdminBtn")
+  ?.addEventListener(
+    "click",
+    loadAdmin
+  );
+
+
+$("#adminCreateEventBtn")
+  ?.addEventListener(
+    "click",
+    createEvent
+  );
+
+
+$("#adminSettleBtn")
+  ?.addEventListener(
+    "click",
+    settleEvent
+  );
+
+
+// =====================================================
+// ADMIN SPORTS SELECT
+// =====================================================
+
+if ($("#adminSport")) {
+
+  $("#adminSport")
+    .innerHTML =
+      SPORTS.map(
+        ([id, , label]) => `
+          <option
+            value="${id}"
+          >
+            ${escapeHtml(label)}
+          </option>
+        `
+      ).join("");
+}
+
+
+// =====================================================
+// PAYMENT RETURN MESSAGE
+// =====================================================
+
+function checkPaymentReturn() {
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const payment =
+    params.get("payment");
+
+  if (!payment) return;
+
+  if (
+    payment === "success"
+  ) {
+
+    toast(
+      state.lang === "fr"
+        ? "Paiement confirmé."
+        : state.lang === "en"
+          ? "Payment confirmed."
+          : state.lang === "es"
+            ? "Pago confirmado."
+            : "Peman konfime."
+    );
+
+  } else {
+
+    toast(
+      state.lang === "fr"
+        ? "Le paiement n'a pas été confirmé."
+        : state.lang === "en"
+          ? "Payment was not confirmed."
+          : state.lang === "es"
+            ? "El pago no fue confirmado."
+            : "Peman an pa t konfime."
+    );
+  }
+
+  window.history.replaceState(
+    {},
+    document.title,
+    window.location.pathname
+  );
+}
+
+
+// =====================================================
+// PWA
+// =====================================================
+
+function registerServiceWorker() {
+
+  if (
+    "serviceWorker" in
+    navigator
+  ) {
+
+    navigator
+      .serviceWorker
+      .register("./sw.js")
+      .catch(error => {
+
+        console.error(
+          "Service Worker:",
+          error
+        );
+      });
+  }
+}
+
+
+// =====================================================
+// START APP
+// =====================================================
+
+if ($("#languageSelect")) {
+
+  $("#languageSelect").value =
+    state.lang;
+}
+
+
+if ($("#currencySelect")) {
+
+  $("#currencySelect").value =
+    state.currency;
+}
+
 
 loadSelections();
 
@@ -2548,4 +5336,8 @@ applyLanguage();
 
 loadRates();
 
-renderEverything();
+loadEvents();
+
+checkPaymentReturn();
+
+registerServiceWorker();
