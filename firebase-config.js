@@ -1,13 +1,9 @@
-// firebase-config.js
-// Configuration Firebase de MystroParyaj
-// Remplace uniquement les valeurs VOTRE_... par celles de ton projet Firebase.
-//
-// IMPORTANT :
-// Ne mets jamais ici ton Client Secret MonCash,
-// une clé secrète NatCash ou un autre secret de paiement.
+// ==========================================
+// MYSTROPARYAJ - FIREBASE CONFIGURATION
+// ==========================================
 
 import { initializeApp } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
 import {
   getAuth,
@@ -16,61 +12,168 @@ import {
   onAuthStateChanged,
   signOut
 } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from
+  "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+
+// ------------------------------------------
+// Firebase MystroParyaj
+// ------------------------------------------
 
 const firebaseConfig = {
-
-  apiKey: "VOTRE_FIREBASE_API_KEY",
-
-  authDomain: "VOTRE_PROJET.firebaseapp.com",
-
-  projectId: "VOTRE_PROJET",
-
-  storageBucket: "VOTRE_PROJET.appspot.com",
-
-  messagingSenderId: "VOTRE_SENDER_ID",
-
-  appId: "VOTRE_APP_ID"
-
+  apiKey: "AIzaSyCV2QFHQVVxk3HZd4G55HEhadO_Eql2ujA",
+  authDomain: "mystroparyaj.firebaseapp.com",
+  projectId: "mystroparyaj",
+  storageBucket: "mystroparyaj.firebasestorage.app",
+  messagingSenderId: "600616770104",
+  appId: "1:600616770104:web:984d5a0a40bce26ab224cd"
 };
 
 
-// Vérifie si Firebase est déjà configuré
-const configured = !Object.values(firebaseConfig)
-  .some(value =>
-    String(value).startsWith("VOTRE_")
+// ------------------------------------------
+// Initialisation
+// ------------------------------------------
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+
+// ------------------------------------------
+// reCAPTCHA
+// ------------------------------------------
+
+let recaptchaVerifier = null;
+
+export function initRecaptcha(buttonId) {
+
+  if (recaptchaVerifier) {
+    return recaptchaVerifier;
+  }
+
+  recaptchaVerifier = new RecaptchaVerifier(
+    auth,
+    buttonId,
+    {
+      size: "invisible"
+    }
   );
 
+  return recaptchaVerifier;
+}
 
-let auth = null;
+
+// ------------------------------------------
+// Envoyer le code SMS
+// Exemple:
+// await sendPhoneCode("+509XXXXXXXX")
+// ------------------------------------------
+
+export async function sendPhoneCode(phoneNumber, buttonId) {
+
+  if (!phoneNumber) {
+    throw new Error("Numéro de téléphone obligatoire.");
+  }
+
+  const verifier = initRecaptcha(buttonId);
+
+  const confirmationResult =
+    await signInWithPhoneNumber(
+      auth,
+      phoneNumber,
+      verifier
+    );
+
+  window.mystroConfirmationResult =
+    confirmationResult;
+
+  return confirmationResult;
+}
 
 
-// Démarre Firebase seulement si les vraies valeurs
-// ont été ajoutées
-if (configured) {
+// ------------------------------------------
+// Vérifier le code SMS
+// ------------------------------------------
 
-  const app =
-    initializeApp(firebaseConfig);
+export async function verifyPhoneCode(code) {
 
-  auth =
-    getAuth(app);
+  if (!window.mystroConfirmationResult) {
+    throw new Error(
+      "Envoyez d'abord le code SMS."
+    );
+  }
+
+  if (!code) {
+    throw new Error(
+      "Entrez le code reçu par SMS."
+    );
+  }
+
+  const result =
+    await window.mystroConfirmationResult.confirm(code);
+
+  const user = result.user;
+
+  // Création du profil seulement s'il n'existe pas.
+  const userRef = doc(db, "users", user.uid);
+
+  const snapshot = await getDoc(userRef);
+
+  if (!snapshot.exists()) {
+
+    await setDoc(userRef, {
+      uid: user.uid,
+      phoneNumber: user.phoneNumber || "",
+      createdAt: serverTimestamp()
+    });
+
+  }
+
+  return user;
+}
+
+
+// ------------------------------------------
+// Utilisateur connecté
+// ------------------------------------------
+
+export function watchAuth(callback) {
+
+  return onAuthStateChanged(
+    auth,
+    callback
+  );
 
 }
 
 
+// ------------------------------------------
+// Déconnexion
+// ------------------------------------------
+
+export async function logoutUser() {
+
+  await signOut(auth);
+
+}
+
+
+// ------------------------------------------
+// Exports
+// ------------------------------------------
+
 export {
-
+  app,
   auth,
-
-  configured,
-
-  RecaptchaVerifier,
-
-  signInWithPhoneNumber,
-
-  onAuthStateChanged,
-
-  signOut
-
+  db
 };
