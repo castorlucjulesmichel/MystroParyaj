@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
-
+<html lang="ht">
 <head>
   <meta charset="UTF-8">
 
@@ -21,19 +20,10 @@
 
   <title>MystroParyaj</title>
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+  <link rel="stylesheet" href="style.css">
 </head>
 
-
 <body>
-
-
-<!-- ==========================================
-     HEADER
-========================================== -->
 
 <header class="topbar">
 
@@ -49,25 +39,17 @@
   </button>
 
 
-  <div class="brand">
+  <a class="brand" href="#" data-go="home">
 
     <span class="brand-mark">
       MP
     </span>
 
-    <div class="brand-text">
+    <span class="brand-name">
+      MystroParyaj
+    </span>
 
-      <strong>
-        MystroParyaj
-      </strong>
-
-      <small data-i18n="tagline">
-        Paris sportifs & portefeuille
-      </small>
-
-    </div>
-
-  </div>
+  </a>
 
 
   <div class="top-actions">
@@ -76,8 +58,8 @@
       id="languageSelect"
       aria-label="Langue"
     >
+      <option value="ht">HT</option>
       <option value="fr">FR</option>
-      <option value="ht">KR</option>
       <option value="en">EN</option>
       <option value="es">ES</option>
     </select>
@@ -97,11 +79,11 @@
 
     <button
       id="loginBtn"
-      class="primary small login-btn"
+      class="profile-button"
       type="button"
-      data-i18n="login"
+      aria-label="Connexion"
     >
-      Connexion
+      👤
     </button>
 
   </div>
@@ -110,20 +92,12 @@
 
 
 
-<!-- ==========================================
-     OVERLAY MOBILE
-========================================== -->
-
 <div
   id="sidebarOverlay"
   class="sidebar-overlay"
 ></div>
 
 
-
-<!-- ==========================================
-     SIDEBAR
-========================================== -->
 
 <aside
   id="sidebar"
@@ -133,98 +107,97 @@
   <nav>
 
     <button
-      data-page="home"
       class="nav-link active"
+      data-page="home"
       type="button"
     >
       🏠
-      <span data-i18n="home">
-        Accueil
-      </span>
+      <span data-i18n="home">Akèy</span>
     </button>
 
 
     <button
-      data-page="sports"
       class="nav-link"
+      data-page="sports"
       type="button"
     >
       ⚽
-      <span data-i18n="sports">
-        Sports
-      </span>
+      <span data-i18n="sports">Espò</span>
     </button>
 
 
     <button
-      data-page="betslip"
       class="nav-link"
+      data-page="betslip"
       type="button"
     >
       🎟️
-      <span data-i18n="betslip">
-        Ticket
-      </span>
+      <span data-i18n="betslip">Tikè</span>
     </button>
 
 
     <button
-      data-page="wallet"
       class="nav-link"
+      data-page="wallet"
       type="button"
     >
       💳
-      <span data-i18n="wallet">
-        Portefeuille
-      </span>
+      <span data-i18n="wallet">Bous</span>
     </button>
 
 
     <button
-      data-page="exchange"
       class="nav-link"
+      data-page="exchange"
       type="button"
     >
       💱
-      <span data-i18n="exchange">
-        Change
-      </span>
+      <span data-i18n="exchange">Chanj</span>
     </button>
 
 
     <button
-      data-page="history"
       class="nav-link"
+      data-page="history"
       type="button"
     >
       🧾
-      <span data-i18n="history">
-        Historique
-      </span>
+      <span data-i18n="history">Istwa</span>
     </button>
 
 
     <button
-      data-page="profile"
       class="nav-link"
+      data-page="profile"
       type="button"
     >
       👤
-      <span data-i18n="profile">
-        Profil
+      <span data-i18n="profile">Pwofil</span>
+    </button>
+
+
+    <button
+      class="nav-link agent-only"
+      data-page="agent"
+      type="button"
+      hidden
+    >
+      🤝
+      <span data-i18n="agentSpace">
+        Espas ajan
       </span>
     </button>
 
 
     <button
-      data-page="admin"
       class="nav-link admin-only"
+      data-page="admin"
       type="button"
       hidden
     >
       📊
       <span data-i18n="admin">
-        Administration
+        Administrasyon
       </span>
     </button>
 
@@ -238,9 +211,8 @@
     </strong>
 
     <span data-i18n="responsible">
-      Jouez de façon responsable.
+      Jwe avèk responsabilite.
     </span>
-
 
     <button
       id="limitsBtn"
@@ -248,7 +220,7 @@
       type="button"
       data-i18n="limits"
     >
-      Mes limites
+      Limit mwen
     </button>
 
   </div>
@@ -257,16 +229,8 @@
 
 
 
-<!-- ==========================================
-     MAIN
-========================================== -->
-
 <main class="main">
 
-
-<!-- ==========================================
-     HOME
-========================================== -->
 
 <section
   id="page-home"
@@ -275,24 +239,24 @@
 
   <div class="hero">
 
-    <div>
+    <div class="hero-content">
 
       <span
         class="pill"
-        data-i18n="livePlatform"
+        data-i18n="securePlatform"
       >
-        Plateforme sécurisée
+        Platfòm sekirize
       </span>
 
 
       <h1 data-i18n="heroTitle">
-        Pariez simplement. Suivez tout clairement.
+        Parye fasil. Swiv tout bagay klè.
       </h1>
 
 
       <p data-i18n="heroText">
-        15 catégories, portefeuille multi-devises,
-        MonCash, NatCash et statistiques.
+        15 kategori, plizyè lajan,
+        MonCash, NatCash ak estatistik.
       </p>
 
 
@@ -300,21 +264,21 @@
 
         <button
           class="primary"
-          type="button"
           data-go="sports"
+          type="button"
           data-i18n="startBet"
         >
-          Voir les paris
+          Gade paryaj
         </button>
 
 
         <button
           class="secondary"
-          type="button"
           data-go="wallet"
+          type="button"
           data-i18n="manageWallet"
         >
-          Gérer le portefeuille
+          Jere bous la
         </button>
 
       </div>
@@ -325,7 +289,7 @@
     <div class="hero-card">
 
       <span data-i18n="securePlatform">
-        Plateforme sécurisée
+        Platfòm sekirize
       </span>
 
       <strong>
@@ -333,8 +297,7 @@
       </strong>
 
       <small data-i18n="securePlatformText">
-        Paris, portefeuille et paiements réunis
-        dans une seule application.
+        Paryaj, bous ak peman nan yon sèl aplikasyon.
       </small>
 
     </div>
@@ -346,70 +309,30 @@
   <div class="stats-grid">
 
     <article class="stat">
-
-      <span data-i18n="balance">
-        Solde
-      </span>
-
-      <strong id="balanceValue">
-        0 HTG
-      </strong>
-
-      <small data-i18n="available">
-        Disponible
-      </small>
-
+      <span data-i18n="balance">Balans</span>
+      <strong id="balanceValue">0 HTG</strong>
+      <small data-i18n="available">Disponib</small>
     </article>
 
 
     <article class="stat">
-
-      <span data-i18n="openBets">
-        Paris ouverts
-      </span>
-
-      <strong id="openBetsValue">
-        0
-      </strong>
-
-      <small data-i18n="activeTickets">
-        Tickets actifs
-      </small>
-
+      <span data-i18n="openBets">Paryaj ouvè</span>
+      <strong id="openBetsValue">0</strong>
+      <small data-i18n="activeTickets">Tikè aktif</small>
     </article>
 
 
     <article class="stat">
-
-      <span data-i18n="todayBets">
-        Paris du jour
-      </span>
-
-      <strong id="todayBetsValue">
-        0
-      </strong>
-
-      <small data-i18n="activity">
-        Activité
-      </small>
-
+      <span data-i18n="todayBets">Paryaj jodi a</span>
+      <strong id="todayBetsValue">0</strong>
+      <small data-i18n="activity">Aktivite</small>
     </article>
 
 
     <article class="stat">
-
-      <span data-i18n="transactions">
-        Transactions
-      </span>
-
-      <strong id="transactionCountValue">
-        0
-      </strong>
-
-      <small data-i18n="history">
-        Historique
-      </small>
-
+      <span data-i18n="transactions">Tranzaksyon</span>
+      <strong id="transactionCountValue">0</strong>
+      <small data-i18n="history">Istwa</small>
     </article>
 
   </div>
@@ -421,21 +344,19 @@
     <div class="panel-head">
 
       <h2 data-i18n="featured">
-        Événements en vedette
+        Evènman vedèt
       </h2>
 
-
       <button
-        data-go="sports"
         class="text-btn"
+        data-go="sports"
         type="button"
         data-i18n="seeAll"
       >
-        Tout voir
+        Wè tout
       </button>
 
     </div>
-
 
     <div
       id="featuredEvents"
@@ -449,13 +370,10 @@
   <div class="panel">
 
     <div class="panel-head">
-
       <h2 data-i18n="weeklyActivity">
-        Activité hebdomadaire
+        Aktivite semèn
       </h2>
-
     </div>
-
 
     <div
       id="barChart"
@@ -468,10 +386,6 @@
 
 
 
-<!-- ==========================================
-     SPORTS
-========================================== -->
-
 <section
   id="page-sports"
   class="page"
@@ -482,11 +396,11 @@
     <div>
 
       <h1 data-i18n="sports">
-        Sports
+        Espò
       </h1>
 
       <p data-i18n="chooseEvent">
-        Choisissez une catégorie puis un pari.
+        Chwazi yon kategori epi yon paryaj.
       </p>
 
     </div>
@@ -508,15 +422,14 @@
         id="sportTitle"
         data-i18n="allEvents"
       >
-        Tous les événements
+        Tout evènman
       </h2>
-
 
       <input
         id="eventSearch"
         type="search"
         data-i18n-placeholder="searchEvent"
-        placeholder="Rechercher un événement"
+        placeholder="Chèche yon evènman"
       >
 
     </div>
@@ -533,10 +446,6 @@
 
 
 
-<!-- ==========================================
-     BETSLIP
-========================================== -->
-
 <section
   id="page-betslip"
   class="page"
@@ -547,11 +456,11 @@
     <div>
 
       <h1 data-i18n="betslip">
-        Ticket
+        Tikè
       </h1>
 
       <p data-i18n="betslipHelp">
-        Vérifiez vos sélections avant validation.
+        Verifye seleksyon yo anvan ou valide.
       </p>
 
     </div>
@@ -562,9 +471,7 @@
   <div class="grid-2">
 
     <div class="panel">
-
       <div id="betSelections"></div>
-
     </div>
 
 
@@ -574,7 +481,7 @@
         for="stakeInput"
         data-i18n="stake"
       >
-        Mise
+        Miz
       </label>
 
 
@@ -598,7 +505,7 @@
       <div class="calc-row">
 
         <span data-i18n="totalOdds">
-          Cote totale
+          Kòt total
         </span>
 
         <strong id="totalOdds">
@@ -611,7 +518,7 @@
       <div class="calc-row">
 
         <span data-i18n="potentialReturn">
-          Retour potentiel
+          Retou posib
         </span>
 
         <strong id="potentialReturn">
@@ -627,16 +534,16 @@
         type="button"
         data-i18n="placeBet"
       >
-        Valider le pari
+        Valide paryaj
       </button>
 
 
       <small
         class="legal"
-        data-i18n="demoWarning"
+        data-i18n="legalNotice"
       >
-        Les opérations réelles nécessitent
-        une activation légale et serveur sécurisée.
+        Operasyon ak lajan reyèl mande otorizasyon legal
+        ak yon backend sekirize.
       </small>
 
     </div>
@@ -646,10 +553,6 @@
 </section>
 
 
-
-<!-- ==========================================
-     WALLET
-========================================== -->
 
 <section
   id="page-wallet"
@@ -661,11 +564,11 @@
     <div>
 
       <h1 data-i18n="wallet">
-        Portefeuille
+        Bous
       </h1>
 
       <p data-i18n="walletText">
-        Dépôts, retraits et soldes.
+        Depo, retrè ak balans ou.
       </p>
 
     </div>
@@ -677,7 +580,7 @@
   <div class="wallet-card">
 
     <span data-i18n="availableBalance">
-      Solde disponible
+      Balans disponib
     </span>
 
     <strong id="walletBalance">
@@ -693,9 +596,8 @@
         type="button"
         data-i18n="deposit"
       >
-        Dépôt
+        Depo
       </button>
-
 
       <button
         id="withdrawTabBtn"
@@ -703,7 +605,7 @@
         type="button"
         data-i18n="withdraw"
       >
-        Retrait
+        Retrè
       </button>
 
     </div>
@@ -717,7 +619,7 @@
     <div class="panel">
 
       <h2 data-i18n="paymentMethod">
-        Méthode de paiement
+        Metòd peman
       </h2>
 
 
@@ -725,11 +627,11 @@
 
         <button
           class="payment active"
-          type="button"
           data-provider="moncash"
+          type="button"
         >
 
-          <span>
+          <span class="payment-logo">
             MC
           </span>
 
@@ -738,7 +640,7 @@
           </strong>
 
           <small data-i18n="mobileMoney">
-            Mobile Money
+            Lajan mobil
           </small>
 
         </button>
@@ -746,11 +648,11 @@
 
         <button
           class="payment"
-          type="button"
           data-provider="natcash"
+          type="button"
         >
 
-          <span>
+          <span class="payment-logo">
             NC
           </span>
 
@@ -759,7 +661,7 @@
           </strong>
 
           <small data-i18n="mobileMoney">
-            Mobile Money
+            Lajan mobil
           </small>
 
         </button>
@@ -776,7 +678,7 @@
         id="paymentFormTitle"
         data-i18n="deposit"
       >
-        Dépôt
+        Depo
       </h2>
 
 
@@ -784,17 +686,17 @@
         for="paymentPhone"
         data-i18n="phone"
       >
-        Numéro de téléphone
+        Nimewo telefòn
       </label>
 
 
       <input
         id="paymentPhone"
         type="tel"
-        autocomplete="tel"
         inputmode="tel"
-        data-i18n-placeholder="phonePlaceholder"
+        autocomplete="tel"
         placeholder="+509 XX XX XX XX"
+        data-i18n-placeholder="phonePlaceholder"
       >
 
 
@@ -802,7 +704,7 @@
         for="paymentAmount"
         data-i18n="amount"
       >
-        Montant
+        Montan
       </label>
 
 
@@ -828,7 +730,7 @@
         type="button"
         data-i18n="continue"
       >
-        Continuer
+        Kontinye
       </button>
 
 
@@ -846,10 +748,6 @@
 
 
 
-<!-- ==========================================
-     EXCHANGE
-========================================== -->
-
 <section
   id="page-exchange"
   class="page"
@@ -860,11 +758,11 @@
     <div>
 
       <h1 data-i18n="exchange">
-        Change
+        Chanj
       </h1>
 
       <p data-i18n="exchangeText">
-        Convertissez entre les devises disponibles.
+        Konvèti ant lajan ki disponib.
       </p>
 
     </div>
@@ -874,37 +772,31 @@
 
   <div class="panel exchange-card">
 
-    <div>
+    <label
+      for="exchangeAmount"
+      data-i18n="from"
+    >
+      Soti
+    </label>
 
-      <label
-        for="exchangeAmount"
-        data-i18n="from"
+
+    <div class="money-input">
+
+      <input
+        id="exchangeAmount"
+        type="number"
+        min="0"
+        value="100"
       >
-        De
-      </label>
 
 
-      <div class="money-input">
-
-        <input
-          id="exchangeAmount"
-          type="number"
-          min="0"
-          value="100"
-        >
-
-
-        <select id="fromCurrency">
-
-          <option value="HTG">HTG</option>
-          <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
-          <option value="CAD">CAD</option>
-          <option value="DOP">DOP</option>
-
-        </select>
-
-      </div>
+      <select id="fromCurrency">
+        <option value="HTG">HTG</option>
+        <option value="USD">USD</option>
+        <option value="EUR">EUR</option>
+        <option value="CAD">CAD</option>
+        <option value="DOP">DOP</option>
+      </select>
 
     </div>
 
@@ -913,59 +805,55 @@
       id="swapCurrencies"
       class="swap"
       type="button"
-      aria-label="Inverser les devises"
     >
       ⇄
     </button>
 
 
-    <div>
+    <label
+      for="exchangeResult"
+      data-i18n="to"
+    >
+      Pou
+    </label>
 
-      <label
-        for="exchangeResult"
-        data-i18n="to"
+
+    <div class="money-input">
+
+      <input
+        id="exchangeResult"
+        type="text"
+        readonly
       >
-        Vers
-      </label>
 
 
-      <div class="money-input">
-
-        <input
-          id="exchangeResult"
-          type="text"
-          readonly
-        >
-
-
-        <select id="toCurrency">
-
-          <option value="USD">USD</option>
-          <option value="HTG">HTG</option>
-          <option value="EUR">EUR</option>
-          <option value="CAD">CAD</option>
-          <option value="DOP">DOP</option>
-
-        </select>
-
-      </div>
+      <select id="toCurrency">
+        <option value="USD">USD</option>
+        <option value="HTG">HTG</option>
+        <option value="EUR">EUR</option>
+        <option value="CAD">CAD</option>
+        <option value="DOP">DOP</option>
+      </select>
 
     </div>
 
 
     <button
       id="exchangeBtn"
-      class="primary"
+      class="primary full"
       type="button"
       data-i18n="convert"
     >
-      Convertir
+      Konvèti
     </button>
 
 
-    <small data-i18n="rateNotice">
-      Les taux doivent être récupérés depuis
-      une source fiable côté serveur.
+    <small
+      id="rateInfo"
+      class="legal"
+      data-i18n="rateNotice"
+    >
+      To yo soti nan sèvè MystroParyaj.
     </small>
 
   </div>
@@ -973,10 +861,6 @@
 </section>
 
 
-
-<!-- ==========================================
-     HISTORY
-========================================== -->
 
 <section
   id="page-history"
@@ -988,11 +872,11 @@
     <div>
 
       <h1 data-i18n="history">
-        Historique
+        Istwa
       </h1>
 
       <p data-i18n="historyText">
-        Vos paris et mouvements de portefeuille.
+        Paryaj ak tranzaksyon ou yo.
       </p>
 
     </div>
@@ -1007,31 +891,14 @@
       <thead>
 
         <tr>
-
-          <th data-i18n="date">
-            Date
-          </th>
-
-          <th data-i18n="type">
-            Type
-          </th>
-
-          <th data-i18n="details">
-            Détails
-          </th>
-
-          <th data-i18n="amount">
-            Montant
-          </th>
-
-          <th data-i18n="status">
-            Statut
-          </th>
-
+          <th data-i18n="date">Dat</th>
+          <th data-i18n="type">Tip</th>
+          <th data-i18n="details">Detay</th>
+          <th data-i18n="amount">Montan</th>
+          <th data-i18n="status">Estati</th>
         </tr>
 
       </thead>
-
 
       <tbody id="historyBody"></tbody>
 
@@ -1043,10 +910,6 @@
 
 
 
-<!-- ==========================================
-     PROFILE
-========================================== -->
-
 <section
   id="page-profile"
   class="page"
@@ -1057,11 +920,11 @@
     <div>
 
       <h1 data-i18n="profile">
-        Profil
+        Pwofil
       </h1>
 
       <p data-i18n="profileText">
-        Compte, sécurité et jeu responsable.
+        Kont, sekirite ak jwèt responsab.
       </p>
 
     </div>
@@ -1077,9 +940,8 @@
         for="profileEmail"
         data-i18n="email"
       >
-        Adresse e-mail
+        Adrès e-mail
       </label>
-
 
       <input
         id="profileEmail"
@@ -1089,12 +951,25 @@
 
 
       <label
+        for="profileAccountType"
+        data-i18n="accountType"
+      >
+        Kalite kont
+      </label>
+
+      <input
+        id="profileAccountType"
+        type="text"
+        readonly
+      >
+
+
+      <label
         for="profileLanguage"
         data-i18n="language"
       >
-        Langue
+        Lang
       </label>
-
 
       <input
         id="profileLanguage"
@@ -1107,9 +982,8 @@
         for="profileCurrency"
         data-i18n="mainCurrency"
       >
-        Devise principale
+        Lajan prensipal
       </label>
-
 
       <input
         id="profileCurrency"
@@ -1124,7 +998,7 @@
         type="button"
         data-i18n="logout"
       >
-        Déconnexion
+        Dekonekte
       </button>
 
     </div>
@@ -1134,7 +1008,7 @@
     <div class="panel">
 
       <h2 data-i18n="responsibleGaming">
-        Jeu responsable
+        Jwèt responsab
       </h2>
 
 
@@ -1142,9 +1016,8 @@
         for="depositLimit"
         data-i18n="dailyDepositLimit"
       >
-        Limite dépôt/jour
+        Limit depo/jou
       </label>
-
 
       <input
         id="depositLimit"
@@ -1158,9 +1031,8 @@
         for="betLimit"
         data-i18n="dailyBetLimit"
       >
-        Limite mises/jour
+        Limit miz/jou
       </label>
-
 
       <input
         id="betLimit"
@@ -1176,7 +1048,7 @@
         type="button"
         data-i18n="save"
       >
-        Enregistrer
+        Anrejistre
       </button>
 
 
@@ -1186,7 +1058,7 @@
         type="button"
         data-i18n="selfExclude"
       >
-        Auto-exclusion
+        Oto-ekskli
       </button>
 
     </div>
@@ -1197,9 +1069,50 @@
 
 
 
-<!-- ==========================================
-     ADMINISTRATION
-========================================== -->
+<section
+  id="page-agent"
+  class="page"
+>
+
+  <div class="page-title">
+
+    <div>
+
+      <h1 data-i18n="agentSpace">
+        Espas ajan
+      </h1>
+
+      <p data-i18n="agentSpaceText">
+        Zòn rezève pou ajan MystroParyaj ki valide.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="stats-grid">
+
+    <article class="stat">
+      <span data-i18n="agentClients">
+        Jwè asosye
+      </span>
+      <strong id="agentClients">0</strong>
+    </article>
+
+
+    <article class="stat">
+      <span data-i18n="agentCommission">
+        Komisyon
+      </span>
+      <strong id="agentCommission">0 HTG</strong>
+    </article>
+
+  </div>
+
+</section>
+
+
 
 <section
   id="page-admin"
@@ -1211,11 +1124,11 @@
     <div>
 
       <h1 data-i18n="admin">
-        Administration
+        Administrasyon
       </h1>
 
       <p data-i18n="adminText">
-        Gestion sécurisée des opérations.
+        Jesyon sekirize MystroParyaj.
       </p>
 
     </div>
@@ -1226,91 +1139,49 @@
   <div class="stats-grid">
 
     <article class="stat">
-
       <span data-i18n="totalStakes">
-        Mises totales
+        Total miz
       </span>
-
-      <strong id="adminStakes">
-        0 HTG
-      </strong>
-
+      <strong id="adminStakes">0 HTG</strong>
     </article>
 
 
     <article class="stat">
-
       <span data-i18n="openBets">
-        Paris ouverts
+        Paryaj ouvè
       </span>
-
-      <strong id="adminOpenBets">
-        0
-      </strong>
-
+      <strong id="adminOpenBets">0</strong>
     </article>
 
 
     <article class="stat">
-
       <span data-i18n="transactions">
-        Transactions
+        Tranzaksyon
       </span>
-
-      <strong id="adminTransactions">
-        0
-      </strong>
-
+      <strong id="adminTransactions">0</strong>
     </article>
 
 
     <article class="stat">
-
       <span data-i18n="users">
-        Utilisateurs
+        Itilizatè
       </span>
-
-      <strong id="adminUsers">
-        0
-      </strong>
-
+      <strong id="adminUsers">0</strong>
     </article>
-
-  </div>
-
-
-  <div class="panel">
-
-    <h2 data-i18n="systemControl">
-      Contrôle du système
-    </h2>
-
-
-    <p data-i18n="systemControlText">
-      Les calculs financiers sensibles sont
-      effectués côté serveur et ne sont pas
-      affichés aux utilisateurs.
-    </p>
 
   </div>
 
 </section>
 
-
 </main>
 
 
-
-<!-- ==========================================
-     AUTHENTIFICATION
-========================================== -->
 
 <div
   id="authModal"
   class="modal"
   role="dialog"
   aria-modal="true"
-  aria-labelledby="authModalTitle"
 >
 
   <div class="modal-card">
@@ -1319,31 +1190,26 @@
       class="close"
       type="button"
       data-close="authModal"
-      aria-label="Fermer"
     >
       ×
     </button>
 
 
-    <h2
-      id="authModalTitle"
-      data-i18n="loginRegister"
-    >
-      Connexion / Inscription
+    <h2 data-i18n="loginRegister">
+      Konekte / Enskri
     </h2>
 
 
     <p data-i18n="emailAuthText">
-      Connectez-vous ou créez votre compte avec votre adresse e-mail.
+      Konekte oswa kreye kont ou ak e-mail ou.
     </p>
-
 
 
     <label
       for="authEmail"
       data-i18n="email"
     >
-      Adresse e-mail
+      Adrès e-mail
     </label>
 
 
@@ -1351,29 +1217,84 @@
       id="authEmail"
       type="email"
       autocomplete="email"
-      inputmode="email"
-      data-i18n-placeholder="emailPlaceholder"
       placeholder="exemple@email.com"
+      data-i18n-placeholder="emailPlaceholder"
     >
-
 
 
     <label
       for="authPassword"
       data-i18n="password"
     >
-      Mot de passe
+      Modpas
     </label>
 
 
     <input
       id="authPassword"
       type="password"
-      autocomplete="current-password"
       minlength="6"
+      autocomplete="current-password"
+      placeholder="Omwen 6 karaktè"
       data-i18n-placeholder="passwordPlaceholder"
-      placeholder="Minimum 6 caractères"
     >
+
+
+
+    <div class="account-type-area">
+
+      <strong data-i18n="accountType">
+        Kalite kont
+      </strong>
+
+
+      <div class="account-type-grid">
+
+        <label class="account-option">
+
+          <input
+            type="radio"
+            name="accountType"
+            value="player"
+            checked
+          >
+
+          <span>
+            <strong data-i18n="playerAccount">
+              Kont jwè
+            </strong>
+
+            <small data-i18n="playerAccountText">
+              Pou jwe epi jere bous ou.
+            </small>
+          </span>
+
+        </label>
+
+
+        <label class="account-option">
+
+          <input
+            type="radio"
+            name="accountType"
+            value="agent"
+          >
+
+          <span>
+            <strong data-i18n="agentAccount">
+              Kont ajan
+            </strong>
+
+            <small data-i18n="agentAccountText">
+              Demann nan dwe valide.
+            </small>
+          </span>
+
+        </label>
+
+      </div>
+
+    </div>
 
 
 
@@ -1385,7 +1306,7 @@
       >
 
       <span data-i18n="ageConfirm">
-        Je confirme avoir au moins 18 ans.
+        Mwen konfime mwen gen omwen 18 an.
       </span>
 
     </label>
@@ -1398,9 +1319,8 @@
       type="button"
       data-i18n="login"
     >
-      Connexion
+      Konekte
     </button>
-
 
 
     <button
@@ -1409,9 +1329,8 @@
       type="button"
       data-i18n="register"
     >
-      Créer un compte
+      Kreye kont
     </button>
-
 
 
     <button
@@ -1420,9 +1339,8 @@
       type="button"
       data-i18n="forgotPassword"
     >
-      Mot de passe oublié ?
+      Ou bliye modpas?
     </button>
-
 
 
     <div
@@ -1437,10 +1355,6 @@
 
 
 
-<!-- ==========================================
-     LIMITES
-========================================== -->
-
 <div
   id="limitsModal"
   class="modal"
@@ -1454,31 +1368,29 @@
       class="close"
       type="button"
       data-close="limitsModal"
-      aria-label="Fermer"
     >
       ×
     </button>
 
 
     <h2 data-i18n="limits">
-      Mes limites
+      Limit mwen
     </h2>
 
 
     <p data-i18n="limitsInfo">
-      Définissez des limites qui ne peuvent
-      pas être dépassées côté serveur.
+      Jere limit jwèt responsab ou yo.
     </p>
 
 
     <button
+      class="primary full"
       data-go="profile"
       data-close="limitsModal"
-      class="primary full"
       type="button"
       data-i18n="manageLimits"
     >
-      Gérer les limites
+      Jere limit yo
     </button>
 
   </div>
@@ -1487,10 +1399,6 @@
 
 
 
-<!-- ==========================================
-     TOAST
-========================================== -->
-
 <div
   id="toast"
   class="toast"
@@ -1498,16 +1406,10 @@
 ></div>
 
 
-
-<!-- ==========================================
-     JAVASCRIPT
-========================================== -->
-
 <script
   type="module"
   src="script.js"
 ></script>
 
-
 </body>
-  </html>
+        </html>
