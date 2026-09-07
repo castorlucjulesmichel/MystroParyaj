@@ -1,5 +1,6 @@
 // ==========================================
 // MYSTROPARYAJ - FIREBASE CONFIGURATION
+// Email/Password + Firestore
 // ==========================================
 
 import { initializeApp } from
@@ -7,8 +8,9 @@ import { initializeApp } from
 
 import {
   getAuth,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   onAuthStateChanged,
   signOut
 } from
@@ -25,7 +27,7 @@ import {
 
 
 // ------------------------------------------
-// Firebase MystroParyaj
+// Firebase config
 // ------------------------------------------
 
 const firebaseConfig = {
@@ -50,92 +52,49 @@ const db = getFirestore(app);
 
 
 // ------------------------------------------
-// reCAPTCHA
+// Créer un compte
 // ------------------------------------------
 
-let recaptchaVerifier = null;
+export async function registerWithEmail(
+  email,
+  password
+) {
 
-export function initRecaptcha(buttonId) {
-
-  if (recaptchaVerifier) {
-    return recaptchaVerifier;
-  }
-
-  recaptchaVerifier = new RecaptchaVerifier(
-    auth,
-    buttonId,
-    {
-      size: "invisible"
-    }
-  );
-
-  return recaptchaVerifier;
-}
-
-
-// ------------------------------------------
-// Envoyer le code SMS
-// Exemple:
-// await sendPhoneCode("+509XXXXXXXX")
-// ------------------------------------------
-
-export async function sendPhoneCode(phoneNumber, buttonId) {
-
-  if (!phoneNumber) {
-    throw new Error("Numéro de téléphone obligatoire.");
-  }
-
-  const verifier = initRecaptcha(buttonId);
-
-  const confirmationResult =
-    await signInWithPhoneNumber(
+  const credential =
+    await createUserWithEmailAndPassword(
       auth,
-      phoneNumber,
-      verifier
+      email,
+      password
     );
 
-  window.mystroConfirmationResult =
-    confirmationResult;
+  const user =
+    credential.user;
 
-  return confirmationResult;
-}
-
-
-// ------------------------------------------
-// Vérifier le code SMS
-// ------------------------------------------
-
-export async function verifyPhoneCode(code) {
-
-  if (!window.mystroConfirmationResult) {
-    throw new Error(
-      "Envoyez d'abord le code SMS."
+  const userRef =
+    doc(
+      db,
+      "users",
+      user.uid
     );
-  }
 
-  if (!code) {
-    throw new Error(
-      "Entrez le code reçu par SMS."
+  const snapshot =
+    await getDoc(
+      userRef
     );
-  }
 
-  const result =
-    await window.mystroConfirmationResult.confirm(code);
-
-  const user = result.user;
-
-  // Création du profil seulement s'il n'existe pas.
-  const userRef = doc(db, "users", user.uid);
-
-  const snapshot = await getDoc(userRef);
 
   if (!snapshot.exists()) {
 
-    await setDoc(userRef, {
-      uid: user.uid,
-      phoneNumber: user.phoneNumber || "",
-      createdAt: serverTimestamp()
-    });
+    await setDoc(
+      userRef,
+      {
+        uid: user.uid,
+        email:
+          user.email || "",
+        createdAt:
+          serverTimestamp()
+      }
+    );
 
   }
 
@@ -144,10 +103,55 @@ export async function verifyPhoneCode(code) {
 
 
 // ------------------------------------------
-// Utilisateur connecté
+// Connexion
 // ------------------------------------------
 
-export function watchAuth(callback) {
+export async function loginWithEmail(
+  email,
+  password
+) {
+
+  const credential =
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+  return credential.user;
+}
+
+
+// ------------------------------------------
+// Réinitialisation mot de passe
+// ------------------------------------------
+
+export async function resetPassword(
+  email
+) {
+
+  if (!email) {
+
+    throw new Error(
+      "Entrez votre adresse e-mail."
+    );
+
+  }
+
+  await sendPasswordResetEmail(
+    auth,
+    email
+  );
+}
+
+
+// ------------------------------------------
+// Suivre l'état de connexion
+// ------------------------------------------
+
+export function watchAuth(
+  callback
+) {
 
   return onAuthStateChanged(
     auth,
@@ -163,7 +167,9 @@ export function watchAuth(callback) {
 
 export async function logoutUser() {
 
-  await signOut(auth);
+  await signOut(
+    auth
+  );
 
 }
 
