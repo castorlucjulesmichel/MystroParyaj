@@ -1,0 +1,11 @@
+{
+  "name": "MystroParyaj",
+  "short_name": "MystroParyaj",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6fb",
+  "theme_color": "#111827",
+  "description": "MystroParyaj mobile web app",
+  "icons": []
+}
