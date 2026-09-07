@@ -1,8 +1,6 @@
 import {
   initializeApp
-} from
-"https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
 import {
   getAuth,
@@ -11,19 +9,14 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged,
   signOut
-} from
-"https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 import {
   getFirestore,
   doc,
-  getDoc,
   setDoc,
   serverTimestamp
-} from
-"https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
-
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -36,18 +29,11 @@ const firebaseConfig = {
 };
 
 
+const app = initializeApp(firebaseConfig);
 
-const app =
-  initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-
-const auth =
-  getAuth(app);
-
-
-const db =
-  getFirestore(app);
-
+const db = getFirestore(app);
 
 
 export async function registerWithEmail(
@@ -63,29 +49,12 @@ export async function registerWithEmail(
       password
     );
 
+  const user = credential.user;
 
-  const user =
-    credential.user;
-
-
-  const userRef =
-    doc(
-      db,
-      "users",
-      user.uid
-    );
-
-
-  const snapshot =
-    await getDoc(userRef);
-
-
-  if (!snapshot.exists()) {
-
-    const profile = {
-
-      uid:
-        user.uid,
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      uid: user.uid,
 
       email:
         user.email || "",
@@ -93,38 +62,26 @@ export async function registerWithEmail(
       accountType:
         "player",
 
+      requestedAccountType:
+        requestedAccountType === "agent"
+          ? "agent"
+          : "player",
+
+      agentRequestStatus:
+        requestedAccountType === "agent"
+          ? "not_submitted"
+          : "none",
+
       createdAt:
         serverTimestamp()
-
-    };
-
-
-    if (
-      requestedAccountType ===
-      "agent"
-    ) {
-
-      profile.requestedAccountType =
-        "agent";
-
-      profile.agentRequestStatus =
-        "pending";
-
+    },
+    {
+      merge: true
     }
-
-
-    await setDoc(
-      userRef,
-      profile
-    );
-
-  }
-
+  );
 
   return user;
-
 }
-
 
 
 export async function loginWithEmail(
@@ -139,45 +96,32 @@ export async function loginWithEmail(
       password
     );
 
-
   return credential.user;
-
 }
 
 
-
-export async function resetPassword(
-  email
-) {
+export async function resetPassword(email) {
 
   await sendPasswordResetEmail(
     auth,
     email
   );
-
 }
 
 
-
-export function watchAuth(
-  callback
-) {
+export function watchAuth(callback) {
 
   return onAuthStateChanged(
     auth,
     callback
   );
-
 }
 
 
-
-export async function logoutUser() {
+export function logoutUser() {
 
   return signOut(auth);
-
 }
-
 
 
 export {
