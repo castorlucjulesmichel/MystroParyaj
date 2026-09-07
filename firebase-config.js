@@ -1,10 +1,8 @@
-// ==========================================
-// MYSTROPARYAJ - FIREBASE CONFIGURATION
-// Email/Password + Firestore
-// ==========================================
+import {
+  initializeApp
+} from
+"https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
-import { initializeApp } from
-  "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
 import {
   getAuth,
@@ -14,7 +12,8 @@ import {
   onAuthStateChanged,
   signOut
 } from
-  "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+"https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
 
 import {
   getFirestore,
@@ -23,12 +22,9 @@ import {
   setDoc,
   serverTimestamp
 } from
-  "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+"https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 
-// ------------------------------------------
-// Firebase config
-// ------------------------------------------
 
 const firebaseConfig = {
   apiKey: "AIzaSyCV2QFHQVVxk3HZd4G55HEhadO_Eql2ujA",
@@ -40,24 +36,24 @@ const firebaseConfig = {
 };
 
 
-// ------------------------------------------
-// Initialisation
-// ------------------------------------------
 
-const app = initializeApp(firebaseConfig);
-
-const auth = getAuth(app);
-
-const db = getFirestore(app);
+const app =
+  initializeApp(firebaseConfig);
 
 
-// ------------------------------------------
-// Créer un compte
-// ------------------------------------------
+const auth =
+  getAuth(app);
+
+
+const db =
+  getFirestore(app);
+
+
 
 export async function registerWithEmail(
   email,
-  password
+  password,
+  requestedAccountType = "player"
 ) {
 
   const credential =
@@ -67,8 +63,10 @@ export async function registerWithEmail(
       password
     );
 
+
   const user =
     credential.user;
+
 
   const userRef =
     doc(
@@ -77,34 +75,57 @@ export async function registerWithEmail(
       user.uid
     );
 
+
   const snapshot =
-    await getDoc(
-      userRef
-    );
+    await getDoc(userRef);
 
 
   if (!snapshot.exists()) {
 
+    const profile = {
+
+      uid:
+        user.uid,
+
+      email:
+        user.email || "",
+
+      accountType:
+        "player",
+
+      createdAt:
+        serverTimestamp()
+
+    };
+
+
+    if (
+      requestedAccountType ===
+      "agent"
+    ) {
+
+      profile.requestedAccountType =
+        "agent";
+
+      profile.agentRequestStatus =
+        "pending";
+
+    }
+
+
     await setDoc(
       userRef,
-      {
-        uid: user.uid,
-        email:
-          user.email || "",
-        createdAt:
-          serverTimestamp()
-      }
+      profile
     );
 
   }
 
+
   return user;
+
 }
 
 
-// ------------------------------------------
-// Connexion
-// ------------------------------------------
 
 export async function loginWithEmail(
   email,
@@ -118,36 +139,25 @@ export async function loginWithEmail(
       password
     );
 
+
   return credential.user;
+
 }
 
 
-// ------------------------------------------
-// Réinitialisation mot de passe
-// ------------------------------------------
 
 export async function resetPassword(
   email
 ) {
 
-  if (!email) {
-
-    throw new Error(
-      "Entrez votre adresse e-mail."
-    );
-
-  }
-
   await sendPasswordResetEmail(
     auth,
     email
   );
+
 }
 
 
-// ------------------------------------------
-// Suivre l'état de connexion
-// ------------------------------------------
 
 export function watchAuth(
   callback
@@ -161,22 +171,14 @@ export function watchAuth(
 }
 
 
-// ------------------------------------------
-// Déconnexion
-// ------------------------------------------
 
 export async function logoutUser() {
 
-  await signOut(
-    auth
-  );
+  return signOut(auth);
 
 }
 
 
-// ------------------------------------------
-// Exports
-// ------------------------------------------
 
 export {
   app,
