@@ -1,5 +1,4 @@
 const ORIGIN = "https://castorlucjulesmichel.github.io";
-const PROJECT = "mystroparyaj";
 
 export default {
   async fetch(req, env) {
@@ -7,13 +6,15 @@ export default {
       const u = new URL(req.url);
       const p = u.pathname;
 
-      if (req.method === "OPTIONS") return cors({}, 204);
+      if (req.method === "OPTIONS") {
+        return cors({}, 204);
+      }
 
       await setup(env.DB);
 
-      // =========================
+      // =====================================================
       // PUBLIC
-      // =========================
+      // =====================================================
 
       if (p === "/") {
         return json({
@@ -41,19 +42,20 @@ export default {
         });
       }
 
-      // MonCash return URL is public
       if (p === "/api/moncash/return") {
         return moncashReturn(req, env);
       }
 
-      // =========================
+      // =====================================================
       // AUTH
-      // =========================
+      // =====================================================
 
       const me = await firebaseUser(req, env);
 
       if (!me) {
-        return json({ error: "Connexion requise" }, 401);
+        return json({
+          error: "Connexion requise"
+        }, 401);
       }
 
       await ensureUser(env, me);
@@ -64,36 +66,52 @@ export default {
         WHERE uid=?
       `).bind(me.uid).first();
 
-      const isAdmin = me.uid === env.ADMIN_UID;
+      const isAdmin =
+        me.uid === env.ADMIN_UID;
 
-      // =========================
+      // =====================================================
       // PROFILE
-      // =========================
+      // =====================================================
 
       if (p === "/api/me") {
         return json({
           uid: me.uid,
           email: me.email || "",
-          role: isAdmin ? "admin" : profile?.role || "player",
-          agentCode: profile?.agent_code || null,
-          linkedAgent: profile?.linked_agent || null,
+          role: isAdmin
+            ? "admin"
+            : profile?.role || "player",
+          agentCode:
+            profile?.agent_code || null,
+          linkedAgent:
+            profile?.linked_agent || null,
           admin: isAdmin
             ? {
-                code: env.ADMIN_CODE || "",
-                email: env.ADMIN_EMAIL || me.email || "",
-                phone: env.ADMIN_PHONE || "",
-                cin: mask(env.ADMIN_CIN || "")
+                code:
+                  env.ADMIN_CODE || "",
+                email:
+                  env.ADMIN_EMAIL ||
+                  me.email ||
+                  "",
+                phone:
+                  env.ADMIN_PHONE || "",
+                cin:
+                  mask(
+                    env.ADMIN_CIN || ""
+                  )
               }
             : null
         });
       }
 
-      // =========================
+      // =====================================================
       // WALLET
-      // =========================
+      // =====================================================
 
       if (p === "/api/wallet") {
-        return userWallet(env, me.uid);
+        return userWallet(
+          env,
+          me.uid
+        );
       }
 
       if (p === "/api/history") {
@@ -105,52 +123,102 @@ export default {
           LIMIT 150
         `).bind(me.uid).all();
 
-        return json({ items: q.results });
+        return json({
+          items: q.results
+        });
       }
 
-      // =========================
+      // =====================================================
       // EXCHANGE
-      // =========================
+      // =====================================================
 
-      if (p === "/api/exchange" && req.method === "POST") {
+      if (
+        p === "/api/exchange" &&
+        req.method === "POST"
+      ) {
         const x = await req.json();
 
-        const amount = Number(x.amount);
-        const from = cleanCurrency(x.from);
-        const to = cleanCurrency(x.to);
+        const amount =
+          Number(x.amount);
 
-        if (!(amount > 0) || !from || !to || from === to) {
-          return json({ error: "Echanj pa valab" }, 400);
+        const from =
+          cleanCurrency(x.from);
+
+        const to =
+          cleanCurrency(x.to);
+
+        if (
+          !(amount > 0) ||
+          !from ||
+          !to ||
+          from === to
+        ) {
+          return json({
+            error:
+              "Echanj pa valab"
+          }, 400);
         }
 
-        const rr = await getRates();
+        const rr =
+          await getRates();
 
-        if (!rr[from] || !rr[to]) {
-          return json({ error: "Deviz pa disponib" }, 400);
+        if (
+          !rr[from] ||
+          !rr[to]
+        ) {
+          return json({
+            error:
+              "Deviz pa disponib"
+          }, 400);
         }
 
-        const current = await balance(env, me.uid, from);
+        const current =
+          await balance(
+            env,
+            me.uid,
+            from
+          );
 
         if (current < amount) {
-          return json({ error: "Solde insuffisant" }, 400);
+          return json({
+            error:
+              "Solde insuffisant"
+          }, 400);
         }
 
         const received =
-          (amount / Number(rr[from])) *
+          (amount /
+            Number(rr[from])) *
           Number(rr[to]);
 
         await env.DB.batch([
           env.DB.prepare(`
             UPDATE wallets
             SET balance=balance-?
-            WHERE uid=? AND currency=?
-          `).bind(amount, me.uid, from),
+            WHERE uid=?
+              AND currency=?
+          `).bind(
+            amount,
+            me.uid,
+            from
+          ),
 
           env.DB.prepare(`
-            INSERT INTO wallets(uid,currency,balance)
-            VALUES(?,?,?)
-            ON CONFLICT(uid,currency)
-            DO UPDATE SET balance=balance+?
+            INSERT INTO wallets(
+              uid,
+              currency,
+              balance
+            )
+            VALUES(
+              ?,?,?
+            )
+            ON CONFLICT(
+              uid,
+              currency
+            )
+            DO UPDATE SET
+              balance=
+                balance+?
           `).bind(
             me.uid,
             to,
@@ -160,10 +228,20 @@ export default {
 
           env.DB.prepare(`
             INSERT INTO tx(
-              uid,type,amount,currency,status,reference
+              uid,
+              type,
+              amount,
+              currency,
+              status,
+              reference
             )
             VALUES(
-              ?,'exchange',?,?,'paid',?
+              ?,
+              'exchange',
+              ?,
+              ?,
+              'paid',
+              ?
             )
           `).bind(
             me.uid,
@@ -182,9 +260,9 @@ export default {
         });
       }
 
-      // =========================
-      // BETS
-      // =========================
+      // =====================================================
+      // BET HISTORY
+      // =====================================================
 
       if (p === "/api/bets") {
         const q = await env.DB.prepare(`
@@ -195,18 +273,34 @@ export default {
           LIMIT 100
         `).bind(me.uid).all();
 
-        return json({ items: q.results });
+        return json({
+          items: q.results
+        });
       }
 
-      if (p === "/api/bet" && req.method === "POST") {
-        return placeBet(req, env, me);
+      // =====================================================
+      // PLACE BET
+      // =====================================================
+
+      if (
+        p === "/api/bet" &&
+        req.method === "POST"
+      ) {
+        return placeBet(
+          req,
+          env,
+          me
+        );
       }
 
-      // =========================
+      // =====================================================
       // AGENT REQUEST
-      // =========================
+      // =====================================================
 
-      if (p === "/api/agent/apply" && req.method === "POST") {
+      if (
+        p === "/api/agent/apply" &&
+        req.method === "POST"
+      ) {
         const x = await req.json();
 
         if (
@@ -217,15 +311,25 @@ export default {
           !x.cin
         ) {
           return json({
-            error: "Ranpli tout enfòmasyon ajan yo."
+            error:
+              "Ranpli tout enfòmasyon ajan yo."
           }, 400);
         }
 
         await env.DB.prepare(`
           INSERT INTO agents(
-            uid,name,phone,city,address,cin,status
+            uid,
+            name,
+            phone,
+            city,
+            address,
+            cin,
+            status
           )
-          VALUES(?,?,?,?,?,?,'pending')
+          VALUES(
+            ?,?,?,?,?,?,
+            'pending'
+          )
           ON CONFLICT(uid)
           DO UPDATE SET
             name=excluded.name,
@@ -249,41 +353,72 @@ export default {
         });
       }
 
-      if (p === "/api/agent/status") {
-        const a = await env.DB.prepare(`
-          SELECT uid,name,phone,city,address,status,code
-          FROM agents
-          WHERE uid=?
-        `).bind(me.uid).first();
+      if (
+        p === "/api/agent/status"
+      ) {
+        const a =
+          await env.DB.prepare(`
+            SELECT
+              uid,
+              name,
+              phone,
+              city,
+              address,
+              status,
+              code
+            FROM agents
+            WHERE uid=?
+          `).bind(
+            me.uid
+          ).first();
 
         return json({
           request: a || null
         });
       }
 
-      // =========================
+      // =====================================================
       // LINK PLAYER TO AGENT
-      // =========================
+      // =====================================================
 
-      if (p === "/api/agent/link" && req.method === "POST") {
+      if (
+        p === "/api/agent/link" &&
+        req.method === "POST"
+      ) {
         const x = await req.json();
-        const code = String(x.code || "").trim().toUpperCase();
 
-        const agent = await env.DB.prepare(`
-          SELECT uid,code
-          FROM agents
-          WHERE code=? AND status='approved'
-        `).bind(code).first();
+        const code =
+          String(
+            x.code || ""
+          )
+            .trim()
+            .toUpperCase();
+
+        const agent =
+          await env.DB.prepare(`
+            SELECT
+              uid,
+              code
+            FROM agents
+            WHERE code=?
+              AND status='approved'
+          `).bind(
+            code
+          ).first();
 
         if (!agent) {
           return json({
-            error: "Kòd ajan pa valab."
+            error:
+              "Kòd ajan pa valab."
           }, 404);
         }
 
-        if (agent.uid === me.uid) {
+        if (
+          agent.uid === me.uid
+        ) {
           return json({
-            error: "Yon ajan pa ka lye kont li ak tèt li."
+            error:
+              "Yon ajan pa ka lye kont li ak tèt li."
           }, 400);
         }
 
@@ -291,7 +426,10 @@ export default {
           UPDATE users
           SET linked_agent=?
           WHERE uid=?
-        `).bind(code, me.uid).run();
+        `).bind(
+          code,
+          me.uid
+        ).run();
 
         return json({
           ok: true,
@@ -299,86 +437,130 @@ export default {
         });
       }
 
-      // =========================
+      // =====================================================
       // AGENT DASHBOARD
-      // =========================
+      // =====================================================
 
-      if (p === "/api/agent/dashboard") {
-        const a = await env.DB.prepare(`
-          SELECT *
-          FROM agents
-          WHERE uid=? AND status='approved'
-        `).bind(me.uid).first();
+      if (
+        p ===
+        "/api/agent/dashboard"
+      ) {
+        const a =
+          await env.DB.prepare(`
+            SELECT *
+            FROM agents
+            WHERE uid=?
+              AND status='approved'
+          `).bind(
+            me.uid
+          ).first();
 
         if (!a) {
           return json({
-            error: "Kont ajan pa apwouve."
+            error:
+              "Kont ajan pa apwouve."
           }, 403);
         }
 
-        const players = await env.DB.prepare(`
-          SELECT uid,email
-          FROM users
-          WHERE linked_agent=?
-          ORDER BY email
-        `).bind(a.code).all();
+        const players =
+          await env.DB.prepare(`
+            SELECT
+              uid,
+              email
+            FROM users
+            WHERE linked_agent=?
+            ORDER BY email
+          `).bind(
+            a.code
+          ).all();
 
-        const commission = await env.DB.prepare(`
-          SELECT
-            currency,
-            COALESCE(SUM(agent_share),0) total
-          FROM ledger
-          WHERE agent=?
-          GROUP BY currency
-        `).bind(a.code).all();
+        const commission =
+          await env.DB.prepare(`
+            SELECT
+              currency,
+              COALESCE(
+                SUM(agent_share),
+                0
+              ) total
+            FROM ledger
+            WHERE agent=?
+            GROUP BY currency
+          `).bind(
+            a.code
+          ).all();
 
-        const bets = await env.DB.prepare(`
-          SELECT
-            currency,
-            COUNT(*) tickets,
-            COALESCE(SUM(stake),0) stakes
-          FROM bets
-          WHERE agent=?
-          GROUP BY currency
-        `).bind(a.code).all();
+        const bets =
+          await env.DB.prepare(`
+            SELECT
+              currency,
+              COUNT(*) tickets,
+              COALESCE(
+                SUM(stake),
+                0
+              ) stakes
+            FROM bets
+            WHERE agent=?
+            GROUP BY currency
+          `).bind(
+            a.code
+          ).all();
 
         return json({
           code: a.code,
           status: a.status,
-          players: players.results,
-          commission: commission.results,
-          activity: bets.results
+          players:
+            players.results,
+          commission:
+            commission.results,
+          activity:
+            bets.results
         });
       }
 
-      // =========================
+      // =====================================================
       // MONCASH DEPOSIT
-      // =========================
+      // =====================================================
 
       if (
-        p === "/api/deposit/moncash" &&
+        p ===
+          "/api/deposit/moncash" &&
         req.method === "POST"
       ) {
         const x = await req.json();
 
-        const amount = Number(x.amount);
+        const amount =
+          Number(x.amount);
 
         if (!(amount > 0)) {
-          return json({ error: "Montant invalide" }, 400);
+          return json({
+            error:
+              "Montant invalide"
+          }, 400);
         }
 
         const orderId =
           "MPD-" +
           Date.now() +
           "-" +
-          crypto.randomUUID().slice(0, 8);
+          crypto.randomUUID()
+            .slice(0, 8);
 
         await env.DB.prepare(`
           INSERT INTO tx(
-            uid,type,amount,currency,status,reference
+            uid,
+            type,
+            amount,
+            currency,
+            status,
+            reference
           )
           VALUES(
-            ?,'deposit',?,'HTG','pending',?
+            ?,
+            'deposit',
+            ?,
+            'HTG',
+            'pending',
+            ?
           )
         `).bind(
           me.uid,
@@ -386,36 +568,48 @@ export default {
           orderId
         ).run();
 
-        const token = await moncashToken(env);
+        const token =
+          await moncashToken(env);
 
-        const api = moncashBase(env);
+        const api =
+          moncashBase(env);
 
         const r = await fetch(
           `${api}/v1/CreatePayment`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json"
+              Authorization:
+                `Bearer ${token}`,
+              "Content-Type":
+                "application/json"
             },
-            body: JSON.stringify({
-              amount,
-              orderId
-            })
+            body:
+              JSON.stringify({
+                amount,
+                orderId
+              })
           }
         );
 
-        const data = await r.json();
+        const data =
+          await r.json();
 
-        if (!r.ok || !data.payment_token?.token) {
+        if (
+          !r.ok ||
+          !data.payment_token
+            ?.token
+        ) {
           return json({
-            error: "MonCash pa aksepte peman an.",
+            error:
+              "MonCash pa aksepte peman an.",
             details: data
           }, 502);
         }
 
         const gateway =
-          env.MONCASH_MODE === "live"
+          env.MONCASH_MODE ===
+          "live"
             ? "https://moncashbutton.digicelgroup.com/Moncash-middleware"
             : "https://sandbox.moncashbutton.digicelgroup.com/Moncash-middleware";
 
@@ -424,38 +618,54 @@ export default {
           orderId,
           redirect:
             `${gateway}/Payment/Redirect?token=` +
-            encodeURIComponent(data.payment_token.token)
+            encodeURIComponent(
+              data.payment_token.token
+            )
         });
       }
 
-      // =========================
+      // =====================================================
       // MONCASH WITHDRAW
-      // =========================
+      // =====================================================
 
       if (
-        p === "/api/withdraw/moncash" &&
+        p ===
+          "/api/withdraw/moncash" &&
         req.method === "POST"
       ) {
         const x = await req.json();
 
-        const amount = Number(x.amount);
-        const phone = String(x.phone || "").trim();
+        const amount =
+          Number(x.amount);
 
-        if (!(amount > 0) || !phone) {
+        const phone =
+          String(
+            x.phone || ""
+          ).trim();
+
+        if (
+          !(amount > 0) ||
+          !phone
+        ) {
           return json({
-            error: "Montant oswa nimewo MonCash invalide."
+            error:
+              "Montant oswa nimewo MonCash invalide."
           }, 400);
         }
 
-        const current = await balance(
-          env,
-          me.uid,
-          "HTG"
-        );
+        const current =
+          await balance(
+            env,
+            me.uid,
+            "HTG"
+          );
 
-        if (current < amount) {
+        if (
+          current < amount
+        ) {
           return json({
-            error: "Solde insuffisant"
+            error:
+              "Solde insuffisant"
           }, 400);
         }
 
@@ -463,13 +673,15 @@ export default {
           "MPW-" +
           Date.now() +
           "-" +
-          crypto.randomUUID().slice(0, 8);
+          crypto.randomUUID()
+            .slice(0, 8);
 
         await env.DB.batch([
           env.DB.prepare(`
             UPDATE wallets
             SET balance=balance-?
-            WHERE uid=? AND currency='HTG'
+            WHERE uid=?
+              AND currency='HTG'
           `).bind(
             amount,
             me.uid
@@ -477,10 +689,20 @@ export default {
 
           env.DB.prepare(`
             INSERT INTO tx(
-              uid,type,amount,currency,status,reference
+              uid,
+              type,
+              amount,
+              currency,
+              status,
+              reference
             )
             VALUES(
-              ?,'withdraw',?,'HTG','processing',?
+              ?,
+              'withdraw',
+              ?,
+              'HTG',
+              'processing',
+              ?
             )
           `).bind(
             me.uid,
@@ -490,27 +712,38 @@ export default {
         ]);
 
         try {
-          const token = await moncashToken(env);
-          const api = moncashBase(env);
+          const token =
+            await moncashToken(env);
 
-          const rr = await fetch(
-            `${api}/v1/Transfert`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                amount,
-                receiver: phone,
-                desc: "MystroParyaj withdrawal",
-                reference: ref
-              })
-            }
-          );
+          const api =
+            moncashBase(env);
 
-          const data = await rr.json();
+          const rr =
+            await fetch(
+              `${api}/v1/Transfert`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                  "Content-Type":
+                    "application/json"
+                },
+                body:
+                  JSON.stringify({
+                    amount,
+                    receiver:
+                      phone,
+                    desc:
+                      "MystroParyaj withdrawal",
+                    reference:
+                      ref
+                  })
+              }
+            );
+
+          const data =
+            await rr.json();
 
           if (!rr.ok) {
             throw new Error(
@@ -523,7 +756,9 @@ export default {
             UPDATE tx
             SET status='paid'
             WHERE reference=?
-          `).bind(ref).run();
+          `).bind(
+            ref
+          ).run();
 
           return json({
             ok: true,
@@ -537,11 +772,22 @@ export default {
           await env.DB.batch([
             env.DB.prepare(`
               INSERT INTO wallets(
-                uid,currency,balance
+                uid,
+                currency,
+                balance
               )
-              VALUES(?,'HTG',?)
-              ON CONFLICT(uid,currency)
-              DO UPDATE SET balance=balance+?
+              VALUES(
+                ?,
+                'HTG',
+                ?
+              )
+              ON CONFLICT(
+                uid,
+                currency
+              )
+              DO UPDATE SET
+                balance=
+                  balance+?
             `).bind(
               me.uid,
               amount,
@@ -552,134 +798,176 @@ export default {
               UPDATE tx
               SET status='failed'
               WHERE reference=?
-            `).bind(ref)
+            `).bind(
+              ref
+            )
           ]);
 
           return json({
-            error: "Retrè MonCash echwe. Lajan an retounen nan bous la.",
-            details: e.message
+            error:
+              "Retrè MonCash echwe. Lajan an retounen nan bous la.",
+            details:
+              e.message
           }, 502);
         }
       }
 
-      // =========================
+      // =====================================================
       // NATCASH
-      // =========================
+      // =====================================================
 
       if (
-        p === "/api/deposit/natcash" ||
-        p === "/api/withdraw/natcash"
+        p ===
+          "/api/deposit/natcash" ||
+        p ===
+          "/api/withdraw/natcash"
       ) {
         return json({
           ok: false,
-          provider: "NatCash",
-          status: "not_configured",
+          provider:
+            "NatCash",
+          status:
+            "not_configured",
           message:
             "API marchand NatCash ofisyèl la poko konekte."
         }, 501);
       }
 
-      // =========================
+      // =====================================================
       // ADMIN GUARD
-      // =========================
+      // =====================================================
 
       if (
-        p.startsWith("/api/admin/") &&
+        p.startsWith(
+          "/api/admin/"
+        ) &&
         !isAdmin
       ) {
         return json({
-          error: "Accès admin refusé"
+          error:
+            "Accès admin refusé"
         }, 403);
       }
 
-      // =========================
-      // ADMIN DASHBOARD
-      // =========================
-
-      if (p === "/api/admin/stats") {
-        return adminStats(env);
-      }
-
-      // =========================
-      // ADMIN LIST PLAYERS
-      // =========================
-
-      if (p === "/api/admin/players") {
-        const q = await env.DB.prepare(`
-          SELECT
-            uid,
-            email,
-            role,
-            linked_agent
-          FROM users
-          ORDER BY email
-          LIMIT 500
-        `).all();
-
-        return json({
-          items: q.results
-        });
-      }
-
-      // =========================
-      // ADMIN LIST AGENTS
-      // =========================
-
-      if (p === "/api/admin/agents") {
-        const q = await env.DB.prepare(`
-          SELECT
-            uid,
-            name,
-            phone,
-            city,
-            address,
-            status,
-            code
-          FROM agents
-          ORDER BY status,id
-        `).all();
-
-        return json({
-          items: q.results
-        });
-      }
-
-      // =========================
-      // ADMIN APPROVE AGENT
-      // =========================
+      // =====================================================
+      // ADMIN STATS
+      // =====================================================
 
       if (
-        p === "/api/admin/agent-review" &&
+        p ===
+        "/api/admin/stats"
+      ) {
+        return adminStats(
+          env
+        );
+      }
+
+      // =====================================================
+      // ADMIN PLAYERS
+      // =====================================================
+
+      if (
+        p ===
+        "/api/admin/players"
+      ) {
+        const q =
+          await env.DB.prepare(`
+            SELECT
+              uid,
+              email,
+              role,
+              linked_agent
+            FROM users
+            ORDER BY email
+            LIMIT 500
+          `).all();
+
+        return json({
+          items:
+            q.results
+        });
+      }
+
+      // =====================================================
+      // ADMIN AGENTS
+      // =====================================================
+
+      if (
+        p ===
+        "/api/admin/agents"
+      ) {
+        const q =
+          await env.DB.prepare(`
+            SELECT
+              uid,
+              name,
+              phone,
+              city,
+              address,
+              status,
+              code
+            FROM agents
+            ORDER BY
+              status,
+              name
+          `).all();
+
+        return json({
+          items:
+            q.results
+        });
+      }
+
+      // =====================================================
+      // ADMIN APPROVE / REJECT AGENT
+      // =====================================================
+
+      if (
+        p ===
+          "/api/admin/agent-review" &&
         req.method === "POST"
       ) {
-        const x = await req.json();
+        const x =
+          await req.json();
 
         if (
-          !["approved", "rejected"].includes(x.status)
+          ![
+            "approved",
+            "rejected"
+          ].includes(
+            x.status
+          )
         ) {
           return json({
-            error: "Estati pa valab."
+            error:
+              "Estati pa valab."
           }, 400);
         }
 
-        const agent = await env.DB.prepare(`
-          SELECT *
-          FROM agents
-          WHERE uid=?
-        `).bind(x.uid).first();
+        const agent =
+          await env.DB.prepare(`
+            SELECT *
+            FROM agents
+            WHERE uid=?
+          `).bind(
+            x.uid
+          ).first();
 
         if (!agent) {
           return json({
-            error: "Demann ajan pa jwenn."
+            error:
+              "Demann ajan pa jwenn."
           }, 404);
         }
 
         const code =
-          x.status === "approved"
+          x.status ===
+          "approved"
             ? (
                 agent.code ||
                 "MP-" +
-                crypto.randomUUID()
+                crypto
+                  .randomUUID()
                   .slice(0, 6)
                   .toUpperCase()
               )
@@ -688,7 +976,13 @@ export default {
         await env.DB.batch([
           env.DB.prepare(`
             UPDATE agents
-            SET status=?,code=COALESCE(?,code)
+            SET
+              status=?,
+              code=
+                COALESCE(
+                  ?,
+                  code
+                )
             WHERE uid=?
           `).bind(
             x.status,
@@ -698,10 +992,17 @@ export default {
 
           env.DB.prepare(`
             UPDATE users
-            SET role=?,agent_code=COALESCE(?,agent_code)
+            SET
+              role=?,
+              agent_code=
+                COALESCE(
+                  ?,
+                  agent_code
+                )
             WHERE uid=?
           `).bind(
-            x.status === "approved"
+            x.status ===
+            "approved"
               ? "agent"
               : "player",
             code,
@@ -711,20 +1012,23 @@ export default {
 
         return json({
           ok: true,
-          status: x.status,
+          status:
+            x.status,
           code
         });
       }
 
-      // =========================
+      // =====================================================
       // ADMIN CREATE EVENT
-      // =========================
+      // =====================================================
 
       if (
-        p === "/api/admin/event" &&
+        p ===
+          "/api/admin/event" &&
         req.method === "POST"
       ) {
-        const x = await req.json();
+        const x =
+          await req.json();
 
         if (
           !x.sport ||
@@ -734,111 +1038,150 @@ export default {
           !x.markets
         ) {
           return json({
-            error: "Enfòmasyon evènman an pa konplè."
+            error:
+              "Enfòmasyon evènman an pa konplè."
           }, 400);
         }
 
-        const r = await env.DB.prepare(`
-          INSERT INTO events(
-            sport,
-            league,
-            home,
-            away,
-            start,
-            markets,
-            status
-          )
-          VALUES(
-            ?,?,?,?,?,?,'open'
-          )
-        `).bind(
-          x.sport,
-          x.league || "",
-          x.home,
-          x.away,
-          x.start,
-          JSON.stringify(x.markets)
-        ).run();
+        const r =
+          await env.DB.prepare(`
+            INSERT INTO events(
+              sport,
+              league,
+              home,
+              away,
+              start,
+              markets,
+              status
+            )
+            VALUES(
+              ?,?,?,?,?,?,
+              'open'
+            )
+          `).bind(
+            x.sport,
+            x.league || "",
+            x.home,
+            x.away,
+            x.start,
+            JSON.stringify(
+              x.markets
+            )
+          ).run();
 
         return json({
           ok: true,
-          id: r.meta.last_row_id
+          id:
+            r.meta.last_row_id
         });
       }
 
-      // =========================
+      // =====================================================
       // ADMIN SETTLEMENT
-      // =========================
+      // =====================================================
 
       if (
-        p === "/api/admin/settle" &&
+        p ===
+          "/api/admin/settle" &&
         req.method === "POST"
       ) {
-        return settleEvent(req, env);
+        return settleEvent(
+          req,
+          env
+        );
       }
 
-      // =========================
+      // =====================================================
       // PLATFORM WALLET
-      // =========================
+      // =====================================================
 
-      if (p === "/api/admin/platform-wallet") {
-        const q = await env.DB.prepare(`
-          SELECT
-            currency,
-            realized_profit,
-            withdrawn,
-            realized_profit-withdrawn AS available
-          FROM platform_wallet
-          ORDER BY currency
-        `).all();
+      if (
+        p ===
+        "/api/admin/platform-wallet"
+      ) {
+        const q =
+          await env.DB.prepare(`
+            SELECT
+              currency,
+              realized_profit,
+              withdrawn,
+              realized_profit -
+                withdrawn
+                AS available
+            FROM platform_wallet
+            ORDER BY currency
+          `).all();
 
         return json({
-          balances: q.results
+          balances:
+            q.results
         });
       }
 
-      // =========================
+      // =====================================================
       // PLATFORM PROFIT WITHDRAW
-      // =========================
+      // =====================================================
 
       if (
-        p === "/api/admin/platform-withdraw" &&
+        p ===
+          "/api/admin/platform-withdraw" &&
         req.method === "POST"
       ) {
-        const x = await req.json();
+        const x =
+          await req.json();
 
-        const amount = Number(x.amount);
-        const currency = cleanCurrency(
-          x.currency || "HTG"
-        );
+        const amount =
+          Number(x.amount);
+
+        const currency =
+          cleanCurrency(
+            x.currency ||
+            "HTG"
+          );
 
         if (!(amount > 0)) {
           return json({
-            error: "Montant invalide."
+            error:
+              "Montant invalide."
           }, 400);
         }
 
-        const platform = await env.DB.prepare(`
-          SELECT
-            realized_profit,
-            withdrawn
-          FROM platform_wallet
-          WHERE currency=?
-        `).bind(currency).first();
+        const platform =
+          await env.DB.prepare(`
+            SELECT
+              realized_profit,
+              withdrawn
+            FROM platform_wallet
+            WHERE currency=?
+          `).bind(
+            currency
+          ).first();
 
         const available =
-          Number(platform?.realized_profit || 0) -
-          Number(platform?.withdrawn || 0);
+          Number(
+            platform
+              ?.realized_profit ||
+            0
+          ) -
+          Number(
+            platform
+              ?.withdrawn ||
+            0
+          );
 
-        if (available < amount) {
+        if (
+          available < amount
+        ) {
           return json({
-            error: "Pwofi MystroParyaj disponib la pa sifi."
+            error:
+              "Pwofi MystroParyaj disponib la pa sifi."
           }, 400);
         }
 
         if (
           currency !== "HTG" ||
-          x.method !== "moncash"
+          x.method !==
+            "moncash"
         ) {
           return json({
             error:
@@ -846,13 +1189,15 @@ export default {
           }, 400);
         }
 
-        const phone = String(
-          x.phone || ""
-        ).trim();
+        const phone =
+          String(
+            x.phone || ""
+          ).trim();
 
         if (!phone) {
           return json({
-            error: "Nimewo MonCash obligatwa."
+            error:
+              "Nimewo MonCash obligatwa."
           }, 400);
         }
 
@@ -860,103 +1205,139 @@ export default {
           "MPP-" +
           Date.now() +
           "-" +
-          crypto.randomUUID().slice(0, 8);
+          crypto.randomUUID()
+            .slice(0, 8);
 
-        await env.DB.prepare(`
-          INSERT INTO platform_withdrawals(
+        const w =
+          await env.DB.prepare(`
+            INSERT INTO
+              platform_withdrawals(
+                amount,
+                currency,
+                method,
+                status
+              )
+            VALUES(
+              ?,
+              ?,
+              'moncash',
+              'processing'
+            )
+          `).bind(
             amount,
-            currency,
-            method,
-            status
-          )
-          VALUES(
-            ?,?,'moncash','processing'
-          )
-        `).bind(
-          amount,
-          currency
-        ).run();
+            currency
+          ).run();
+
+        const withdrawalId =
+          w.meta.last_row_id;
 
         try {
-          const token = await moncashToken(env);
+          const token =
+            await moncashToken(env);
 
-          const r = await fetch(
-            `${moncashBase(env)}/v1/Transfert`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                amount,
-                receiver: phone,
-                desc:
-                  "MystroParyaj platform profit",
-                reference: ref
-              })
-            }
-          );
+          const r =
+            await fetch(
+              `${moncashBase(env)}/v1/Transfert`,
+              {
+                method:
+                  "POST",
+                headers: {
+                  Authorization:
+                    `Bearer ${token}`,
+                  "Content-Type":
+                    "application/json"
+                },
+                body:
+                  JSON.stringify({
+                    amount,
+                    receiver:
+                      phone,
+                    desc:
+                      "MystroParyaj platform profit",
+                    reference:
+                      ref
+                  })
+              }
+            );
 
-          const data = await r.json();
+          const data =
+            await r.json();
 
           if (!r.ok) {
             throw new Error(
-              data.message || "MonCash error"
+              data.message ||
+              "MonCash error"
             );
           }
 
           await env.DB.batch([
             env.DB.prepare(`
-              UPDATE platform_wallet
-              SET withdrawn=withdrawn+?
-              WHERE currency=?
+              INSERT INTO
+                platform_wallet(
+                  currency,
+                  realized_profit,
+                  withdrawn
+                )
+              VALUES(
+                ?,
+                0,
+                ?
+              )
+              ON CONFLICT(
+                currency
+              )
+              DO UPDATE SET
+                withdrawn=
+                  withdrawn+?
             `).bind(
+              currency,
               amount,
-              currency
+              amount
             ),
 
             env.DB.prepare(`
-              UPDATE platform_withdrawals
+              UPDATE
+                platform_withdrawals
               SET status='paid'
-              WHERE id=(
-                SELECT MAX(id)
-                FROM platform_withdrawals
-              )
-            `)
+              WHERE id=?
+            `).bind(
+              withdrawalId
+            )
           ]);
 
           return json({
             ok: true,
             amount,
             currency,
-            reference: ref
+            reference:
+              ref
           });
 
         } catch (e) {
-
           await env.DB.prepare(`
-            UPDATE platform_withdrawals
+            UPDATE
+              platform_withdrawals
             SET status='failed'
-            WHERE id=(
-              SELECT MAX(id)
-              FROM platform_withdrawals
-            )
-          `).run();
+            WHERE id=?
+          `).bind(
+            withdrawalId
+          ).run();
 
           return json({
-            error: "Retrè pwofi echwe.",
-            details: e.message
+            error:
+              "Retrè pwofi echwe.",
+            details:
+              e.message
           }, 502);
         }
       }
 
       return json({
-        error: "Route introuvable"
+        error:
+          "Route introuvable"
       }, 404);
 
     } catch (e) {
-
       return json({
         error:
           e?.message ||
@@ -967,16 +1348,25 @@ export default {
 };
 
 // =====================================================
-// BET
+// PLACE BET
 // =====================================================
 
-async function placeBet(req, env, me) {
-  const x = await req.json();
+async function placeBet(
+  req,
+  env,
+  me
+) {
+  const x =
+    await req.json();
 
-  const stake = Number(x.stake);
-  const currency = cleanCurrency(
-    x.currency || "HTG"
-  );
+  const stake =
+    Number(x.stake);
+
+  const currency =
+    cleanCurrency(
+      x.currency ||
+      "HTG"
+    );
 
   if (
     !(stake > 0) ||
@@ -985,115 +1375,162 @@ async function placeBet(req, env, me) {
     !x.market
   ) {
     return json({
-      error: "Tikè invalide."
+      error:
+        "Tikè invalide."
     }, 400);
   }
 
-  const event = await env.DB.prepare(`
-    SELECT *
-    FROM events
-    WHERE id=? AND status='open'
-  `).bind(
-    x.eventId
-  ).first();
+  const event =
+    await env.DB.prepare(`
+      SELECT *
+      FROM events
+      WHERE id=?
+        AND status='open'
+    `).bind(
+      x.eventId
+    ).first();
 
   if (!event) {
     return json({
-      error: "Evènman fèmen."
+      error:
+        "Evènman fèmen."
     }, 400);
   }
 
   if (
     event.start &&
-    new Date(event.start).getTime() <= Date.now()
+    new Date(
+      event.start
+    ).getTime() <=
+      Date.now()
   ) {
     return json({
-      error: "Evènman sa a deja kòmanse."
+      error:
+        "Evènman sa a deja kòmanse."
     }, 400);
   }
 
   const markets =
-    JSON.parse(event.markets || "{}");
+    JSON.parse(
+      event.markets ||
+      "{}"
+    );
 
   const odds =
-    Number(markets[x.market]);
+    Number(
+      markets[
+        x.market
+      ]
+    );
 
   if (!(odds > 0)) {
     return json({
-      error: "Kòt pa valab."
+      error:
+        "Kòt pa valab."
     }, 400);
   }
 
-  const current = await balance(
-    env,
-    me.uid,
-    currency
-  );
+  const current =
+    await balance(
+      env,
+      me.uid,
+      currency
+    );
 
-  if (current < stake) {
+  if (
+    current < stake
+  ) {
     return json({
-      error: "Solde insuffisant."
+      error:
+        "Solde insuffisant."
     }, 400);
   }
 
   const profile =
     await env.DB.prepare(`
-      SELECT linked_agent
+      SELECT
+        linked_agent
       FROM users
       WHERE uid=?
-    `).bind(me.uid).first();
+    `).bind(
+      me.uid
+    ).first();
 
   const agent =
-    profile?.linked_agent || null;
+    profile
+      ?.linked_agent ||
+    null;
 
-  // Internal business split
+  // INTERNAL RULES:
+  // direct player:
+  // 60% winners / 40% platform
+  //
+  // linked player:
+  // 60% winners
+  // 10% agent
+  // 30% platform
+
   const reserve =
-    round2(stake * 0.60);
+    round2(
+      stake * 0.60
+    );
 
   const agentShare =
     agent
-      ? round2(stake * 0.10)
+      ? round2(
+          stake * 0.10
+        )
       : 0;
 
   const platformShare =
     agent
-      ? round2(stake * 0.30)
-      : round2(stake * 0.40);
+      ? round2(
+          stake * 0.30
+        )
+      : round2(
+          stake * 0.40
+        );
 
   const payout =
-    round2(stake * odds);
+    round2(
+      stake * odds
+    );
 
-  const bet = await env.DB.prepare(`
-    INSERT INTO bets(
-      uid,
-      event_id,
-      market,
+  const bet =
+    await env.DB.prepare(`
+      INSERT INTO bets(
+        uid,
+        event_id,
+        market,
+        stake,
+        currency,
+        odds,
+        payout,
+        agent,
+        status
+      )
+      VALUES(
+        ?,?,?,?,?,?,?,?,
+        'open'
+      )
+    `).bind(
+      me.uid,
+      x.eventId,
+      x.market,
       stake,
       currency,
       odds,
       payout,
-      agent,
-      status
-    )
-    VALUES(
-      ?,?,?,?,?,?,?,?,'open'
-    )
-  `).bind(
-    me.uid,
-    x.eventId,
-    x.market,
-    stake,
-    currency,
-    odds,
-    payout,
-    agent
-  ).run();
+      agent
+    ).run();
 
   await env.DB.batch([
     env.DB.prepare(`
       UPDATE wallets
-      SET balance=balance-?
-      WHERE uid=? AND currency=?
+      SET balance=
+        balance-?
+      WHERE uid=?
+        AND currency=?
     `).bind(
       stake,
       me.uid,
@@ -1113,7 +1550,8 @@ async function placeBet(req, env, me) {
         ?,?,?,?,?,?
       )
     `).bind(
-      bet.meta.last_row_id,
+      bet.meta
+        .last_row_id,
       reserve,
       agentShare,
       platformShare,
@@ -1131,38 +1569,64 @@ async function placeBet(req, env, me) {
         reference
       )
       VALUES(
-        ?,'bet',?,?,'paid',?
+        ?,
+        'bet',
+        ?,
+        ?,
+        'paid',
+        ?
       )
     `).bind(
       me.uid,
       stake,
       currency,
-      String(bet.meta.last_row_id)
+      String(
+        bet.meta
+          .last_row_id
+      )
     )
   ]);
 
   return json({
     ok: true,
-    betId: bet.meta.last_row_id,
-    totalOdds: odds,
-    potentialReturn: payout
+    betId:
+      bet.meta
+        .last_row_id,
+    totalOdds:
+      odds,
+    potentialReturn:
+      payout
   });
 }
 
 // =====================================================
-// SETTLEMENT
+// SETTLE EVENT
 // =====================================================
 
-async function settleEvent(req, env) {
-  const x = await req.json();
+async function settleEvent(
+  req,
+  env
+) {
+  const x =
+    await req.json();
 
-  const eventId = Number(x.eventId);
+  const eventId =
+    Number(
+      x.eventId
+    );
+
   const winner =
-    String(x.winner || "").trim();
+    String(
+      x.winner || ""
+    ).trim();
 
-  if (!eventId || !winner) {
+  if (
+    !eventId ||
+    !winner
+  ) {
     return json({
-      error: "Rezilta pa valab."
+      error:
+        "Rezilta pa valab."
     }, 400);
   }
 
@@ -1171,52 +1635,64 @@ async function settleEvent(req, env) {
       SELECT *
       FROM events
       WHERE id=?
-    `).bind(eventId).first();
+    `).bind(
+      eventId
+    ).first();
 
   if (!event) {
     return json({
-      error: "Evènman pa jwenn."
+      error:
+        "Evènman pa jwenn."
     }, 404);
   }
 
   await env.DB.prepare(`
     UPDATE events
-    SET status='settled',
-        winner=?
+    SET
+      status='settled',
+      winner=?
     WHERE id=?
   `).bind(
     winner,
     eventId
   ).run();
 
-  const q = await env.DB.prepare(`
-    SELECT *
-    FROM bets
-    WHERE event_id=?
-      AND status='open'
-  `).bind(
-    eventId
-  ).all();
+  const q =
+    await env.DB.prepare(`
+      SELECT *
+      FROM bets
+      WHERE event_id=?
+        AND status='open'
+    `).bind(
+      eventId
+    ).all();
 
   let won = 0;
   let lost = 0;
 
-  for (const b of q.results) {
-
+  for (
+    const b of q.results
+  ) {
     const ledger =
       await env.DB.prepare(`
         SELECT *
         FROM ledger
         WHERE bet_id=?
-      `).bind(b.id).first();
+      `).bind(
+        b.id
+      ).first();
 
-    if (b.market !== winner) {
-
+    if (
+      b.market !==
+      winner
+    ) {
       await env.DB.prepare(`
         UPDATE bets
         SET status='lost'
         WHERE id=?
-      `).bind(b.id).run();
+      `).bind(
+        b.id
+      ).run();
 
       await realizeShares(
         env,
@@ -1232,20 +1708,27 @@ async function settleEvent(req, env) {
       await env.DB.prepare(`
         SELECT id
         FROM tx
-        WHERE type='win'
+        WHERE
+          type='win'
           AND reference=?
       `).bind(
-        String(b.id)
+        String(
+          b.id
+        )
       ).first();
 
-    if (duplicate) continue;
+    if (duplicate) {
+      continue;
+    }
 
     await env.DB.batch([
       env.DB.prepare(`
         UPDATE bets
         SET status='won'
         WHERE id=?
-      `).bind(b.id),
+      `).bind(
+        b.id
+      ),
 
       env.DB.prepare(`
         INSERT INTO wallets(
@@ -1256,9 +1739,13 @@ async function settleEvent(req, env) {
         VALUES(
           ?,?,?
         )
-        ON CONFLICT(uid,currency)
-        DO UPDATE
-        SET balance=balance+?
+        ON CONFLICT(
+          uid,
+          currency
+        )
+        DO UPDATE SET
+          balance=
+            balance+?
       `).bind(
         b.uid,
         b.currency,
@@ -1276,13 +1763,20 @@ async function settleEvent(req, env) {
           reference
         )
         VALUES(
-          ?,'win',?,?,'paid',?
+          ?,
+          'win',
+          ?,
+          ?,
+          'paid',
+          ?
         )
       `).bind(
         b.uid,
         b.payout,
         b.currency,
-        String(b.id)
+        String(
+          b.id
+        )
       )
     ]);
 
@@ -1305,7 +1799,7 @@ async function settleEvent(req, env) {
 }
 
 // =====================================================
-// REALIZE PLATFORM + AGENT SHARES
+// REALIZE AGENT + PLATFORM SHARES
 // =====================================================
 
 async function realizeShares(
@@ -1313,7 +1807,9 @@ async function realizeShares(
   bet,
   ledger
 ) {
-  if (!ledger) return;
+  if (!ledger) {
+    return;
+  }
 
   const reference =
     `share-${bet.id}`;
@@ -1322,11 +1818,16 @@ async function realizeShares(
     await env.DB.prepare(`
       SELECT id
       FROM tx
-      WHERE type='shares_realized'
+      WHERE
+        type='shares_realized'
         AND reference=?
-    `).bind(reference).first();
+    `).bind(
+      reference
+    ).first();
 
-  if (already) return;
+  if (already) {
+    return;
+  }
 
   const jobs = [];
 
@@ -1340,20 +1841,33 @@ async function realizeShares(
       VALUES(
         ?,?,0
       )
-      ON CONFLICT(currency)
-      DO UPDATE
-      SET realized_profit=
-        realized_profit+?
+      ON CONFLICT(
+        currency
+      )
+      DO UPDATE SET
+        realized_profit=
+          realized_profit+?
     `).bind(
       bet.currency,
-      Number(ledger.platform_share || 0),
-      Number(ledger.platform_share || 0)
+      Number(
+        ledger
+          .platform_share ||
+        0
+      ),
+      Number(
+        ledger
+          .platform_share ||
+        0
+      )
     )
   );
 
   if (
     ledger.agent &&
-    Number(ledger.agent_share || 0) > 0
+    Number(
+      ledger.agent_share ||
+      0
+    ) > 0
   ) {
     const agent =
       await env.DB.prepare(`
@@ -1376,14 +1890,22 @@ async function realizeShares(
           VALUES(
             ?,?,?
           )
-          ON CONFLICT(uid,currency)
-          DO UPDATE
-          SET balance=balance+?
+          ON CONFLICT(
+            uid,
+            currency
+          )
+          DO UPDATE SET
+            balance=
+              balance+?
         `).bind(
           agent.uid,
           bet.currency,
-          Number(ledger.agent_share),
-          Number(ledger.agent_share)
+          Number(
+            ledger.agent_share
+          ),
+          Number(
+            ledger.agent_share
+          )
         )
       );
 
@@ -1398,13 +1920,22 @@ async function realizeShares(
             reference
           )
           VALUES(
-            ?,'agent_commission',?,?,'paid',?
+            ?,
+            'agent_commission',
+            ?,
+            ?,
+            'paid',
+            ?
           )
         `).bind(
           agent.uid,
-          Number(ledger.agent_share),
+          Number(
+            ledger.agent_share
+          ),
           bet.currency,
-          String(bet.id)
+          String(
+            bet.id
+          )
         )
       );
     }
@@ -1429,67 +1960,105 @@ async function realizeShares(
         ?
       )
     `).bind(
-      Number(ledger.platform_share || 0),
+      Number(
+        ledger
+          .platform_share ||
+        0
+      ),
       bet.currency,
       reference
     )
   );
 
-  await env.DB.batch(jobs);
+  await env.DB.batch(
+    jobs
+  );
 }
 
 // =====================================================
 // ADMIN STATS
 // =====================================================
 
-async function adminStats(env) {
+async function adminStats(
+  env
+) {
   const players =
     await scalar(
       env,
-      "SELECT COUNT(*) n FROM users WHERE role='player'"
+      `
+        SELECT COUNT(*) n
+        FROM users
+        WHERE role='player'
+      `
     );
 
   const agents =
     await scalar(
       env,
-      "SELECT COUNT(*) n FROM agents WHERE status='approved'"
+      `
+        SELECT COUNT(*) n
+        FROM agents
+        WHERE status='approved'
+      `
     );
 
   const pendingAgents =
     await scalar(
       env,
-      "SELECT COUNT(*) n FROM agents WHERE status='pending'"
+      `
+        SELECT COUNT(*) n
+        FROM agents
+        WHERE status='pending'
+      `
     );
 
   const totalBets =
     await scalar(
       env,
-      "SELECT COUNT(*) n FROM bets"
+      `
+        SELECT COUNT(*) n
+        FROM bets
+      `
     );
 
   const openBets =
     await scalar(
       env,
-      "SELECT COUNT(*) n FROM bets WHERE status='open'"
+      `
+        SELECT COUNT(*) n
+        FROM bets
+        WHERE status='open'
+      `
     );
 
   const wonBets =
     await scalar(
       env,
-      "SELECT COUNT(*) n FROM bets WHERE status='won'"
+      `
+        SELECT COUNT(*) n
+        FROM bets
+        WHERE status='won'
+      `
     );
 
   const lostBets =
     await scalar(
       env,
-      "SELECT COUNT(*) n FROM bets WHERE status='lost'"
+      `
+        SELECT COUNT(*) n
+        FROM bets
+        WHERE status='lost'
+      `
     );
 
   const stakes =
     await env.DB.prepare(`
       SELECT
         currency,
-        COALESCE(SUM(stake),0) total
+        COALESCE(
+          SUM(stake),
+          0
+        ) total
       FROM bets
       GROUP BY currency
     `).all();
@@ -1498,9 +2067,13 @@ async function adminStats(env) {
     await env.DB.prepare(`
       SELECT
         currency,
-        COALESCE(SUM(amount),0) total
+        COALESCE(
+          SUM(amount),
+          0
+        ) total
       FROM tx
-      WHERE type='win'
+      WHERE
+        type='win'
         AND status='paid'
       GROUP BY currency
     `).all();
@@ -1509,9 +2082,13 @@ async function adminStats(env) {
     await env.DB.prepare(`
       SELECT
         currency,
-        COALESCE(SUM(amount),0) total
+        COALESCE(
+          SUM(amount),
+          0
+        ) total
       FROM tx
-      WHERE type='agent_commission'
+      WHERE
+        type='agent_commission'
         AND status='paid'
       GROUP BY currency
     `).all();
@@ -1522,7 +2099,9 @@ async function adminStats(env) {
         currency,
         realized_profit,
         withdrawn,
-        realized_profit-withdrawn AS available
+        realized_profit -
+          withdrawn
+          AS available
       FROM platform_wallet
     `).all();
 
@@ -1531,15 +2110,23 @@ async function adminStats(env) {
     agents,
     pendingAgents,
     bets: {
-      total: totalBets,
-      open: openBets,
-      won: wonBets,
-      lost: lostBets
+      total:
+        totalBets,
+      open:
+        openBets,
+      won:
+        wonBets,
+      lost:
+        lostBets
     },
-    stakes: stakes.results,
-    winnersPaid: wins.results,
-    agentCommissions: commissions.results,
-    platform: platform.results
+    stakes:
+      stakes.results,
+    winnersPaid:
+      wins.results,
+    agentCommissions:
+      commissions.results,
+    platform:
+      platform.results
   });
 }
 
@@ -1547,11 +2134,19 @@ async function adminStats(env) {
 // MONCASH RETURN
 // =====================================================
 
-async function moncashReturn(req, env) {
-  const u = new URL(req.url);
+async function moncashReturn(
+  req,
+  env
+) {
+  const u =
+    new URL(
+      req.url
+    );
 
   const transactionId =
-    u.searchParams.get("transactionId");
+    u.searchParams.get(
+      "transactionId"
+    );
 
   if (!transactionId) {
     return redirectApp(
@@ -1561,23 +2156,31 @@ async function moncashReturn(req, env) {
 
   try {
     const token =
-      await moncashToken(env);
+      await moncashToken(
+        env
+      );
 
-    const r = await fetch(
-      `${moncashBase(env)}/v1/RetrieveTransactionPayment`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          transactionId
-        })
-      }
-    );
+    const r =
+      await fetch(
+        `${moncashBase(env)}/v1/RetrieveTransactionPayment`,
+        {
+          method:
+            "POST",
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+            "Content-Type":
+              "application/json"
+          },
+          body:
+            JSON.stringify({
+              transactionId
+            })
+        }
+      );
 
-    const data = await r.json();
+    const data =
+      await r.json();
 
     const payment =
       data.payment ||
@@ -1598,7 +2201,8 @@ async function moncashReturn(req, env) {
       await env.DB.prepare(`
         SELECT *
         FROM tx
-        WHERE type='deposit'
+        WHERE
+          type='deposit'
           AND reference=?
       `).bind(
         orderId
@@ -1610,7 +2214,10 @@ async function moncashReturn(req, env) {
       );
     }
 
-    if (tx.status === "paid") {
+    if (
+      tx.status ===
+      "paid"
+    ) {
       return redirectApp(
         "payment=success"
       );
@@ -1626,7 +2233,9 @@ async function moncashReturn(req, env) {
     if (
       Math.abs(
         paidAmount -
-        Number(tx.amount)
+        Number(
+          tx.amount
+        )
       ) > 0.01
     ) {
       return redirectApp(
@@ -1642,15 +2251,25 @@ async function moncashReturn(req, env) {
           balance
         )
         VALUES(
-          ?,'HTG',?
+          ?,
+          'HTG',
+          ?
         )
-        ON CONFLICT(uid,currency)
-        DO UPDATE
-        SET balance=balance+?
+        ON CONFLICT(
+          uid,
+          currency
+        )
+        DO UPDATE SET
+          balance=
+            balance+?
       `).bind(
         tx.uid,
-        Number(tx.amount),
-        Number(tx.amount)
+        Number(
+          tx.amount
+        ),
+        Number(
+          tx.amount
+        )
       ),
 
       env.DB.prepare(`
@@ -1667,7 +2286,6 @@ async function moncashReturn(req, env) {
     );
 
   } catch (e) {
-
     return redirectApp(
       "payment=failed"
     );
@@ -1675,59 +2293,92 @@ async function moncashReturn(req, env) {
 }
 
 // =====================================================
-// FIREBASE TOKEN VERIFY THROUGH IDENTITY TOOLKIT
+// FIREBASE USER
 // =====================================================
 
-async function firebaseUser(req, env) {
+async function firebaseUser(
+  req,
+  env
+) {
   const token =
-    (req.headers.get("Authorization") || "")
-      .replace("Bearer ", "")
+    (
+      req.headers.get(
+        "Authorization"
+      ) ||
+      ""
+    )
+      .replace(
+        "Bearer ",
+        ""
+      )
       .trim();
 
-  if (!token) return null;
+  if (!token) {
+    return null;
+  }
 
   const key =
     env.FIREBASE_WEB_API_KEY ||
     "AIzaSyCV2QFHQVVxk3HZd4G55HEhadO_Eql2ujA";
 
-  const r = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${key}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        idToken: token
-      })
-    }
-  );
+  const r =
+    await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${key}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json"
+        },
+        body:
+          JSON.stringify({
+            idToken:
+              token
+          })
+      }
+    );
 
-  if (!r.ok) return null;
+  if (!r.ok) {
+    return null;
+  }
 
-  const d = await r.json();
+  const d =
+    await r.json();
 
-  const u = d.users?.[0];
+  const u =
+    d.users?.[0];
 
-  if (!u) return null;
+  if (!u) {
+    return null;
+  }
 
   return {
-    uid: u.localId,
-    email: u.email || ""
+    uid:
+      u.localId,
+    email:
+      u.email ||
+      ""
   };
 }
 
 // =====================================================
-// MONCASH
+// MONCASH HELPERS
 // =====================================================
 
-function moncashBase(env) {
-  return env.MONCASH_MODE === "live"
+function moncashBase(
+  env
+) {
+  return (
+    env.MONCASH_MODE ===
+    "live"
+  )
     ? "https://moncashbutton.digicelgroup.com/Api"
     : "https://sandbox.moncashbutton.digicelgroup.com/Api";
 }
 
-async function moncashToken(env) {
+async function moncashToken(
+  env
+) {
   if (
     !env.MONCASH_CLIENT_ID ||
     !env.MONCASH_CLIENT_SECRET
@@ -1743,24 +2394,29 @@ async function moncashToken(env) {
   const encoded =
     btoa(raw);
 
-  const r = await fetch(
-    `${moncashBase(env)}/oauth/token`,
-    {
-      method: "POST",
-      headers: {
-        Authorization:
-          `Basic ${encoded}`,
-        "Content-Type":
-          "application/x-www-form-urlencoded"
-      },
-      body:
-        "scope=read,write&grant_type=client_credentials"
-    }
-  );
+  const r =
+    await fetch(
+      `${moncashBase(env)}/oauth/token`,
+      {
+        method: "POST",
+        headers: {
+          Authorization:
+            `Basic ${encoded}`,
+          "Content-Type":
+            "application/x-www-form-urlencoded"
+        },
+        body:
+          "scope=read,write&grant_type=client_credentials"
+      }
+    );
 
-  const d = await r.json();
+  const d =
+    await r.json();
 
-  if (!r.ok || !d.access_token) {
+  if (
+    !r.ok ||
+    !d.access_token
+  ) {
     throw new Error(
       d.error_description ||
       "MonCash authentication failed"
@@ -1776,7 +2432,8 @@ async function moncashToken(env) {
 
 async function rates() {
   try {
-    const r = await getRates();
+    const r =
+      await getRates();
 
     return json({
       ok: true,
@@ -1793,9 +2450,10 @@ async function rates() {
 }
 
 async function getRates() {
-  const r = await fetch(
-    "https://open.er-api.com/v6/latest/USD"
-  );
+  const r =
+    await fetch(
+      "https://open.er-api.com/v6/latest/USD"
+    );
 
   if (!r.ok) {
     throw new Error(
@@ -1803,35 +2461,45 @@ async function getRates() {
     );
   }
 
-  const d = await r.json();
+  const d =
+    await r.json();
 
   return d.rates || {};
 }
 
 // =====================================================
-// DB
+// USERS + WALLET
 // =====================================================
 
-async function ensureUser(env, me) {
+async function ensureUser(
+  env,
+  me
+) {
   const role =
-    me.uid === env.ADMIN_UID
+    me.uid ===
+    env.ADMIN_UID
       ? "admin"
       : "player";
 
   await env.DB.prepare(`
     INSERT INTO users(
-      uid,email,role
+      uid,
+      email,
+      role
     )
     VALUES(
       ?,?,?
     )
     ON CONFLICT(uid)
     DO UPDATE SET
-      email=excluded.email,
-      role=CASE
-        WHEN users.uid=? THEN 'admin'
-        ELSE users.role
-      END
+      email=
+        excluded.email,
+      role=
+        CASE
+          WHEN users.uid=?
+          THEN 'admin'
+          ELSE users.role
+        END
   `).bind(
     me.uid,
     me.email || "",
@@ -1840,14 +2508,20 @@ async function ensureUser(env, me) {
   ).run();
 }
 
-async function userWallet(env, uid) {
-  const q = await env.DB.prepare(`
-    SELECT
-      currency,
-      balance
-    FROM wallets
-    WHERE uid=?
-  `).bind(uid).all();
+async function userWallet(
+  env,
+  uid
+) {
+  const q =
+    await env.DB.prepare(`
+      SELECT
+        currency,
+        balance
+      FROM wallets
+      WHERE uid=?
+    `).bind(
+      uid
+    ).all();
 
   const balances = {
     HTG: 0,
@@ -1857,10 +2531,17 @@ async function userWallet(env, uid) {
     DOP: 0
   };
 
-  q.results.forEach(x => {
-    balances[x.currency] =
-      Number(x.balance || 0);
-  });
+  q.results.forEach(
+    x => {
+      balances[
+        x.currency
+      ] =
+        Number(
+          x.balance ||
+          0
+        );
+    }
+  );
 
   return json({
     balances
@@ -1872,72 +2553,97 @@ async function balance(
   uid,
   currency
 ) {
-  const x = await env.DB.prepare(`
-    SELECT balance
-    FROM wallets
-    WHERE uid=? AND currency=?
-  `).bind(
-    uid,
-    currency
-  ).first();
-
-  return Number(
-    x?.balance || 0
-  );
-}
-
-async function scalar(env, sql) {
   const x =
-    await env.DB.prepare(sql).first();
+    await env.DB.prepare(`
+      SELECT balance
+      FROM wallets
+      WHERE uid=?
+        AND currency=?
+    `).bind(
+      uid,
+      currency
+    ).first();
 
   return Number(
-    x?.n || 0
+    x?.balance ||
+    0
+  );
+}
+
+async function scalar(
+  env,
+  sql
+) {
+  const x =
+    await env.DB.prepare(
+      sql
+    ).first();
+
+  return Number(
+    x?.n ||
+    0
   );
 }
 
 // =====================================================
-// SETUP
+// DB SETUP
 // =====================================================
 
-async function setup(db) {
+async function setup(
+  db
+) {
   await db.batch([
-
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS users(
-        uid TEXT PRIMARY KEY,
+      CREATE TABLE
+      IF NOT EXISTS users(
+        uid TEXT
+          PRIMARY KEY,
         email TEXT,
-        role TEXT DEFAULT 'player',
+        role TEXT
+          DEFAULT 'player',
         agent_code TEXT,
         linked_agent TEXT
       )
     `),
 
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS wallets(
+      CREATE TABLE
+      IF NOT EXISTS wallets(
         uid TEXT,
         currency TEXT,
-        balance REAL DEFAULT 0,
-        PRIMARY KEY(uid,currency)
+        balance REAL
+          DEFAULT 0,
+        PRIMARY KEY(
+          uid,
+          currency
+        )
       )
     `),
 
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS events(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+      CREATE TABLE
+      IF NOT EXISTS events(
+        id INTEGER
+          PRIMARY KEY
+          AUTOINCREMENT,
         sport TEXT,
         league TEXT,
         home TEXT,
         away TEXT,
         start TEXT,
         markets TEXT,
-        status TEXT DEFAULT 'open',
+        status TEXT
+          DEFAULT 'open',
         winner TEXT
       )
     `),
 
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS bets(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+      CREATE TABLE
+      IF NOT EXISTS bets(
+        id INTEGER
+          PRIMARY KEY
+          AUTOINCREMENT,
         uid TEXT,
         event_id INTEGER,
         market TEXT,
@@ -1946,13 +2652,17 @@ async function setup(db) {
         odds REAL,
         payout REAL,
         agent TEXT,
-        status TEXT DEFAULT 'open'
+        status TEXT
+          DEFAULT 'open'
       )
     `),
 
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS ledger(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+      CREATE TABLE
+      IF NOT EXISTS ledger(
+        id INTEGER
+          PRIMARY KEY
+          AUTOINCREMENT,
         bet_id INTEGER,
         reserve REAL,
         agent_share REAL,
@@ -1963,50 +2673,68 @@ async function setup(db) {
     `),
 
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS tx(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+      CREATE TABLE
+      IF NOT EXISTS tx(
+        id INTEGER
+          PRIMARY KEY
+          AUTOINCREMENT,
         uid TEXT,
         type TEXT,
         amount REAL,
         currency TEXT,
         status TEXT,
         reference TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        created_at TEXT
+          DEFAULT
+          CURRENT_TIMESTAMP
       )
     `),
 
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS agents(
-        uid TEXT PRIMARY KEY,
+      CREATE TABLE
+      IF NOT EXISTS agents(
+        uid TEXT
+          PRIMARY KEY,
         name TEXT,
         phone TEXT,
         city TEXT,
         address TEXT,
         cin TEXT,
-        status TEXT DEFAULT 'pending',
+        status TEXT
+          DEFAULT 'pending',
         code TEXT
       )
     `),
 
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS platform_wallet(
-        currency TEXT PRIMARY KEY,
-        realized_profit REAL DEFAULT 0,
-        withdrawn REAL DEFAULT 0
+      CREATE TABLE
+      IF NOT EXISTS platform_wallet(
+        currency TEXT
+          PRIMARY KEY,
+        realized_profit REAL
+          DEFAULT 0,
+        withdrawn REAL
+          DEFAULT 0
       )
     `),
 
     db.prepare(`
-      CREATE TABLE IF NOT EXISTS platform_withdrawals(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+      CREATE TABLE
+      IF NOT EXISTS
+      platform_withdrawals(
+        id INTEGER
+          PRIMARY KEY
+          AUTOINCREMENT,
         amount REAL,
         currency TEXT,
         method TEXT,
-        status TEXT DEFAULT 'pending',
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        status TEXT
+          DEFAULT 'pending',
+        created_at TEXT
+          DEFAULT
+          CURRENT_TIMESTAMP
       )
     `)
-
   ]);
 }
 
@@ -2024,16 +2752,20 @@ function eventOut(e) {
     start: e.start,
     markets:
       JSON.parse(
-        e.markets || "{}"
+        e.markets ||
+        "{}"
       ),
     status: e.status
   };
 }
 
-function cleanCurrency(c) {
+function cleanCurrency(
+  c
+) {
   const v =
-    String(c || "")
-      .toUpperCase();
+    String(
+      c || ""
+    ).toUpperCase();
 
   return [
     "HTG",
@@ -2046,18 +2778,31 @@ function cleanCurrency(c) {
     : null;
 }
 
-function round2(n) {
-  return Math.round(
-    Number(n) * 100
-  ) / 100;
+function round2(
+  n
+) {
+  return (
+    Math.round(
+      Number(n) *
+      100
+    ) /
+    100
+  );
 }
 
-function mask(v) {
-  if (!v) return "";
+function mask(
+  v
+) {
+  if (!v) {
+    return "";
+  }
 
-  const s = String(v);
+  const s =
+    String(v);
 
-  if (s.length <= 4) {
+  if (
+    s.length <= 4
+  ) {
     return "****";
   }
 
@@ -2072,22 +2817,35 @@ function mask(v) {
   );
 }
 
-function redirectApp(q) {
+function redirectApp(
+  q
+) {
   return Response.redirect(
     `https://castorlucjulesmichel.github.io/MystroParyaj/?${q}`,
     302
   );
 }
 
-function json(data, status = 200) {
-  return cors(data, status);
+function json(
+  data,
+  status = 200
+) {
+  return cors(
+    data,
+    status
+  );
 }
 
-function cors(data, status = 200) {
+function cors(
+  data,
+  status = 200
+) {
   return new Response(
     status === 204
       ? null
-      : JSON.stringify(data),
+      : JSON.stringify(
+          data
+        ),
     {
       status,
       headers: {
