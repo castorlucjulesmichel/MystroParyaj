@@ -1,9 +1,10 @@
 const ORIGIN="https://castorlucjulesmichel.github.io";
 const FIREBASE_KEY="AIzaSyCV2QFHQVVxk3HZd4G55HEhadO_Eql2ujA";
 const CURRENCIES=["HTG","USD","EUR","CAD","DOP"];
+const CORS={"access-control-allow-origin":ORIGIN,"access-control-allow-headers":"Authorization,Content-Type,X-Admin-Session","access-control-allow-methods":"GET,POST,OPTIONS","access-control-max-age":"86400"};
 
 export default{async fetch(req,env){try{
-  if(req.method==="OPTIONS")return out({},204);
+  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:CORS});
   if(!env.DB)throw err("D1 DB binding missing",500);
   await setup(env.DB);
   const p=new URL(req.url).pathname;
@@ -28,7 +29,7 @@ export default{async fetch(req,env){try{
   throw err("Route introuvable",404);
 }catch(e){return out({error:e.message||"Server error"},e.status||500)}}};
 
-function out(x,s=200){return new Response(JSON.stringify(x),{status:s,headers:{"content-type":"application/json","access-control-allow-origin":ORIGIN,"access-control-allow-headers":"Authorization,Content-Type,X-Admin-Session","access-control-allow-methods":"GET,POST,OPTIONS","cache-control":"no-store"}})}
+function out(x,s=200){return new Response(JSON.stringify(x),{status:s,headers:{"content-type":"application/json",...CORS,"cache-control":"no-store"}})}
 function err(m,s=400){let e=new Error(m);e.status=s;return e}
 function guard(v){if(!v)throw err("Accès admin refusé",403)}
 const round=n=>Math.round(Number(n)*100)/100;
