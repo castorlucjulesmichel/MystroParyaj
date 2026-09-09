@@ -7,6 +7,36 @@
     es:{rule:"El pago del ganador se calcula al liquidar el evento.",gain:"Ganancia potencial estimada",note:"Estimación según la cuota mostrada; el importe final se confirma al liquidar el boleto."}
   };
 
+  let cachedToken="";
+  let cachedUid="";
+
+  async function token(force=false){
+    if(!state.user)return "";
+    const uid=state.user.uid||"";
+    if(!force&&cachedToken&&cachedUid===uid)return cachedToken;
+    cachedToken=await state.user.getIdToken(force);
+    cachedUid=uid;
+    return cachedToken;
+  }
+
+  async function request(path,opt={},retry=true){
+    const headers={"Content-Type":"application/json",...(opt.headers||{})};
+    const idToken=await token(false);
+    if(idToken)headers.Authorization=`Bearer ${idToken}`;
+    if(state.adminSession&&path.startsWith("/api/admin/"))headers["X-Admin-Session"]=state.adminSession;
+    let r=await fetch(API+path,{...opt,headers,cache:"no-store"});
+    if(r.status===401&&state.user&&retry){
+      const fresh=await token(true);
+      if(fresh)headers.Authorization=`Bearer ${fresh}`;
+      r=await fetch(API+path,{...opt,headers,cache:"no-store"});
+    }
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){const e=new Error(d.error||`Server error (${r.status})`);e.status=r.status;e.data=d;throw e;}
+    return d;
+  }
+
+  try{api=request;}catch(_){window.api=request;}
+
   function language(){return $("language")?.value||"ht";}
   function text(){const t=labels[language()]||labels.ht;if($("ticketRuleText"))$("ticketRuleText").textContent=t.rule;if($("potentialGainLabel"))$("potentialGainLabel").textContent=t.gain;if($("potentialGainNote"))$("potentialGainNote").textContent=t.note;}
   function odds(){const s=$("selectedOdds")?.textContent||"";const m=s.match(/([0-9]+(?:[.,][0-9]+)?)/);return m?Number(m[1].replace(",",".")):0;}
