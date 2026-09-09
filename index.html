@@ -1,1449 +1,917 @@
 <!DOCTYPE html>
 <html lang="ht">
 <head>
-
   <meta charset="UTF-8">
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    content="width=device-width,initial-scale=1.0,viewport-fit=cover"
   >
 
-  <meta
-    name="theme-color"
-    content="#101a2d"
-  >
+  <meta name="theme-color" content="#071524">
 
   <title>MystroParyaj</title>
 
-  <link
-    rel="manifest"
-    href="manifest.json"
-  >
-
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
-
-
-  <!-- =========================
-       CORRECTION MODAL
-       Sa anpeche style.css
-       kache Login/CIN
-  ========================== -->
-
-  <style>
-
-    .hidden{
-      display:none !important;
-    }
-
-
-    .overlay{
-      position:fixed !important;
-
-      top:0 !important;
-      right:0 !important;
-      bottom:0 !important;
-      left:0 !important;
-
-      width:100% !important;
-      height:100% !important;
-
-      background:
-        rgba(
-          5,
-          10,
-          20,
-          0.72
-        ) !important;
-
-      display:flex !important;
-
-      align-items:center !important;
-
-      justify-content:center !important;
-
-      padding:20px !important;
-
-      box-sizing:
-        border-box !important;
-
-      overflow-y:auto !important;
-
-      visibility:
-        visible !important;
-
-      opacity:1 !important;
-
-      z-index:
-        999999 !important;
-    }
-
-
-    .overlay.hidden{
-      display:none !important;
-    }
-
-
-    .modal{
-
-      display:block !important;
-
-      position:relative !important;
-
-      width:100% !important;
-
-      max-width:
-        430px !important;
-
-      min-height:
-        200px !important;
-
-      background:
-        #ffffff !important;
-
-      color:
-        #111827 !important;
-
-      border-radius:
-        22px !important;
-
-      padding:
-        24px !important;
-
-      margin:auto !important;
-
-      box-sizing:
-        border-box !important;
-
-      opacity:
-        1 !important;
-
-      visibility:
-        visible !important;
-
-      transform:
-        none !important;
-
-      z-index:
-        1000000 !important;
-
-      box-shadow:
-        0 20px 60px
-        rgba(
-          0,
-          0,
-          0,
-          .35
-        ) !important;
-    }
-
-
-    .modal h2{
-
-      display:block !important;
-
-      color:
-        #101828 !important;
-
-      margin:
-        0 0 10px !important;
-
-      font-size:
-        25px !important;
-    }
-
-
-    .modal p{
-
-      display:block !important;
-
-      color:
-        #475467 !important;
-
-      line-height:
-        1.5 !important;
-    }
-
-
-    .field{
-
-      display:block;
-
-      width:100%;
-
-      margin:
-        14px 0;
-    }
-
-
-    .field input,
-    .field select{
-
-      display:block !important;
-
-      width:
-        100% !important;
-
-      min-height:
-        48px !important;
-
-      box-sizing:
-        border-box !important;
-
-      padding:
-        13px 14px !important;
-
-      border:
-        1px solid
-        #d0d5dd !important;
-
-      border-radius:
-        12px !important;
-
-      background:
-        #ffffff !important;
-
-      color:
-        #101828 !important;
-
-      font-size:
-        16px !important;
-
-      opacity:
-        1 !important;
-
-      visibility:
-        visible !important;
-    }
-
-
-    .btn{
-
-      display:inline-block !important;
-
-      min-height:
-        46px;
-
-      border:
-        none;
-
-      border-radius:
-        12px;
-
-      padding:
-        12px 17px;
-
-      margin:
-        5px 4px 5px 0;
-
-      font-weight:
-        800;
-
-      font-size:
-        15px;
-
-      cursor:pointer;
-    }
-
-
-    .primary{
-
-      background:
-        #101a2d !important;
-
-      color:
-        #ffffff !important;
-    }
-
-
-    .secondary{
-
-      background:
-        #e9eef5 !important;
-
-      color:
-        #101828 !important;
-    }
-
-
-    .msg{
-
-      display:block;
-
-      margin-top:
-        12px;
-
-      font-weight:
-        700;
-
-      line-height:
-        1.4;
-    }
-
-
-    .msg.error{
-
-      color:
-        #b42318;
-    }
-
-
-    .msg.ok{
-
-      color:
-        #067647;
-    }
-
-
-    /* =========================
-       HEADER
-    ========================== */
-
-    .mp-header{
-
-      display:flex;
-
-      align-items:center;
-
-      gap:12px;
-
-      padding:
-        12px;
-
-      background:
-        #ffffff;
-
-      border-bottom:
-        1px solid
-        #eaecf0;
-
-      position:
-        sticky;
-
-      top:0;
-
-      z-index:
-        100;
-    }
-
-
-    .mp-header button{
-
-      min-width:
-        48px;
-
-      min-height:
-        48px;
-
-      font-size:
-        24px;
-
-      background:
-        #ffffff;
-
-      border:
-        1px solid
-        #d0d5dd;
-
-      border-radius:
-        10px;
-    }
-
-
-    .mp-logo{
-
-      font-size:
-        27px;
-
-      font-weight:
-        900;
-
-      color:
-        #101828;
-    }
-
-
-    .mp-header select{
-
-      flex:1;
-
-      min-height:
-        48px;
-
-      border:
-        1px solid
-        #d0d5dd;
-
-      border-radius:
-        14px;
-
-      padding:
-        0 14px;
-
-      font-size:
-        17px;
-
-      background:
-        #ffffff;
-    }
-
-
-    /* =========================
-       SIDE MENU
-    ========================== */
-
-    #side{
-
-      position:fixed;
-
-      top:0;
-
-      left:0;
-
-      width:
-        min(
-          300px,
-          85vw
-        );
-
-      height:
-        100vh;
-
-      background:
-        #101a2d;
-
-      padding:
-        80px 18px 20px;
-
-      box-sizing:
-        border-box;
-
-      z-index:
-        9000;
-
-      overflow-y:
-        auto;
-    }
-
-
-    #side button{
-
-      display:block;
-
-      width:100%;
-
-      margin:
-        7px 0;
-
-      padding:
-        14px;
-
-      text-align:left;
-
-      border:
-        none;
-
-      border-radius:
-        10px;
-
-      background:
-        #1d2939;
-
-      color:
-        #ffffff;
-
-      font-size:
-        16px;
-
-      font-weight:
-        700;
-    }
-
-
-    /* =========================
-       MAIN
-    ========================== */
-
-    main{
-
-      max-width:
-        900px;
-
-      margin:auto;
-
-      padding:
-        22px 16px
-        80px;
-
-      box-sizing:
-        border-box;
-    }
-
-
-    main h1{
-
-      color:
-        #101828;
-    }
-
-
-    main h2{
-
-      margin-top:
-        28px;
-
-      color:
-        #101828;
-    }
-
-
-    article{
-
-      background:
-        #ffffff;
-
-      border:
-        1px solid
-        #eaecf0;
-
-      border-radius:
-        15px;
-
-      padding:
-        15px;
-
-      margin:
-        12px 0;
-    }
-
-
-    pre{
-
-      white-space:
-        pre-wrap;
-
-      word-break:
-        break-word;
-    }
-
-
-    .admin-box{
-
-      background:
-        #ffffff;
-
-      border:
-        1px solid
-        #eaecf0;
-
-      border-radius:
-        16px;
-
-      padding:
-        15px;
-
-      margin:
-        12px 0;
-    }
-
-
-  </style>
-
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css?v=30">
 </head>
-
 
 <body>
 
+<header class="topbar">
 
-<!-- =========================
-     HEADER
-========================== -->
-
-<header class="mp-header">
-
-  <button
-    id="menuBtn"
-    type="button"
-    aria-label="Menu"
-  >
+  <button id="menuBtn" class="icon-btn" type="button">
     ☰
   </button>
 
-
-  <div class="mp-logo">
-    MP
+  <div class="brand">
+    <span class="brand-logo">MP</span>
+    <span class="brand-name">MystroParyaj</span>
   </div>
 
+  <div class="top-actions">
 
-  <select
-    id="currency"
-    aria-label="Deviz"
-  >
+    <select id="language" class="top-select">
+      <option value="ht">HT</option>
+      <option value="fr">FR</option>
+      <option value="en">EN</option>
+      <option value="es">ES</option>
+    </select>
 
-    <option value="HTG">
-      HTG
-    </option>
+    <select id="currency" class="top-select">
+      <option value="HTG">HTG</option>
+      <option value="USD">USD</option>
+      <option value="EUR">EUR</option>
+      <option value="CAD">CAD</option>
+      <option value="DOP">DOP</option>
+    </select>
 
-    <option value="USD">
-      USD
-    </option>
+    <button id="profileBtn" class="profile-btn" type="button">
+      👤
+    </button>
 
-    <option value="EUR">
-      EUR
-    </option>
-
-    <option value="CAD">
-      CAD
-    </option>
-
-    <option value="DOP">
-      DOP
-    </option>
-
-  </select>
-
-
-  <button
-    id="profileBtn"
-    type="button"
-    aria-label="Profil"
-  >
-    👤
-  </button>
+  </div>
 
 </header>
 
 
+<aside id="side" class="sidebar hidden">
 
-<!-- =========================
-     MENU
-========================== -->
+  <div class="sidebar-title">
+    MystroParyaj
+  </div>
 
-<aside
-  id="side"
-  class="hidden"
->
-
-  <button
-    type="button"
-    data-p="home"
-  >
+  <button data-page="home">
     🏠 Akèy
   </button>
 
-
-  <button
-    type="button"
-    data-p="sports"
-  >
+  <button data-page="sports">
     ⚽ Espò
   </button>
 
-
-  <button
-    type="button"
-    data-p="bet"
-  >
-    🎫 Tikè
+  <button data-page="bet">
+    🎟 Tikè
   </button>
 
-
-  <button
-    type="button"
-    data-p="wallet"
-  >
+  <button data-page="wallet">
     💰 Bous
   </button>
 
-
-  <button
-    type="button"
-    data-p="exchange"
-  >
+  <button data-page="exchange">
     💱 Echanj
   </button>
 
+  <button data-page="history">
+    📋 Istwa
+  </button>
 
   <button
-    type="button"
-    data-p="agent"
+    id="agentNav"
+    data-page="agent"
+    class="hidden"
   >
     🧑‍💼 Espas Ajan
   </button>
 
+  <button data-page="profile">
+    👤 Profil mwen
+  </button>
 
   <button
     id="adminNav"
-    type="button"
-    data-p="admin"
+    data-page="admin"
     class="hidden"
   >
-    ⚙️ Administrasyon
+    ⚙ Administrasyon
   </button>
 
-
-  <button
-    id="logout"
-    type="button"
-  >
+  <button id="logoutBtn" class="logout-btn">
     🚪 Dekonekte
   </button>
 
 </aside>
 
 
+<main class="main">
 
-<main>
+
+<!-- HOME -->
+
+<section id="page-home" class="page">
+
+  <div class="hero">
+
+    <span class="badge">
+      MystroParyaj
+    </span>
+
+    <h1>
+      Parye fasil.<br>
+      Swiv tout bagay klè.
+    </h1>
+
+    <p>
+      Espò, tikè, bous ak rezilta nan yon sèl aplikasyon.
+    </p>
+
+    <div class="hero-buttons">
+
+      <button
+        class="btn primary"
+        data-open="sports"
+      >
+        Gade paryaj
+      </button>
+
+      <button
+        class="btn light"
+        data-open="wallet"
+      >
+        Jere bous la
+      </button>
+
+    </div>
+
+  </div>
 
 
-<!-- =========================
-     HOME
-========================== -->
+  <div class="stats-grid">
 
-<section id="p-home">
+    <div class="stat-card">
+      <span>Balans</span>
+      <strong id="homeBalance">0 HTG</strong>
+    </div>
 
-  <h1>
-    MystroParyaj
-  </h1>
+    <div class="stat-card">
+      <span>Pari ouvè</span>
+      <strong id="homeOpenBets">0</strong>
+    </div>
 
-  <p>
-    Platfòm paryaj ak
-    jesyon bous.
-  </p>
+    <div class="stat-card">
+      <span>Tranzaksyon</span>
+      <strong id="homeTransactions">0</strong>
+    </div>
 
-  <h2>
-    Evènman
-  </h2>
+  </div>
 
-  <div id="homeEvents">
-    Chajman...
+
+  <div class="section-title">
+    <h2>Espò popilè</h2>
+    <p>Chwazi kategori ou vle a.</p>
+  </div>
+
+  <div id="homeSports" class="sports-grid"></div>
+
+
+  <div class="section-title">
+    <h2>Evènman disponib</h2>
+    <p>Match ki ouvri kounye a.</p>
+  </div>
+
+  <div id="homeEvents" class="events-list"></div>
+
+</section>
+
+
+<!-- SPORTS -->
+
+<section id="page-sports" class="page hidden">
+
+  <div class="page-title">
+    <h1>Espò</h1>
+    <p>Chwazi yon kategori epi fè paryaj ou.</p>
+  </div>
+
+  <div id="sportCategories" class="sports-grid"></div>
+
+  <div class="section-title">
+    <h2 id="sportTitle">Tout evènman</h2>
+  </div>
+
+  <div id="eventsList" class="events-list"></div>
+
+</section>
+
+
+<!-- PLAYER BET -->
+
+<section id="page-bet" class="page hidden">
+
+  <div class="page-title">
+    <h1>Tikè mwen</h1>
+    <p>Prepare paryaj ou.</p>
+  </div>
+
+  <div class="panel">
+
+    <div class="field">
+      <label>ID evènman</label>
+      <input id="betEventId" type="number">
+    </div>
+
+    <div class="field">
+      <label>Seleksyon</label>
+
+      <select id="betMarket">
+        <option value="home">1 — Ekip 1</option>
+        <option value="draw">X — Match nul</option>
+        <option value="away">2 — Ekip 2</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Montan miz</label>
+      <input
+        id="betStake"
+        type="number"
+        min="1"
+        placeholder="Montan"
+      >
+    </div>
+
+    <div class="ticket-summary">
+      <span>Deviz</span>
+      <strong id="ticketCurrency">HTG</strong>
+    </div>
+
+    <button id="placeBetBtn" class="btn primary full">
+      Achte tikè
+    </button>
+
+    <div id="betMsg" class="message"></div>
+
   </div>
 
 </section>
 
 
+<!-- WALLET -->
 
-<!-- =========================
-     SPORTS
-========================== -->
+<section id="page-wallet" class="page hidden">
 
-<section
-  id="p-sports"
-  class="hidden"
->
+  <div class="page-title">
+    <h1>Bous mwen</h1>
+    <p>Depo, retrè, balans ak echanj.</p>
+  </div>
 
-  <h1>
-    Espò
-  </h1>
+  <div class="main-wallet">
 
-  <div id="events">
-    Chajman...
+    <div>
+      <span>Balans prensipal</span>
+      <strong id="walletMainBalance">0 HTG</strong>
+    </div>
+
+    <div class="wallet-symbol">
+      💳
+    </div>
+
+  </div>
+
+  <div id="currencyBalances" class="currency-grid"></div>
+
+
+  <div class="wallet-actions">
+
+    <button data-wallet-action="deposit">
+      <b>＋</b>
+      Depoze
+    </button>
+
+    <button data-wallet-action="withdraw">
+      <b>−</b>
+      Retire
+    </button>
+
+    <button data-open="exchange">
+      <b>⇄</b>
+      Echanj
+    </button>
+
+    <button data-open="history">
+      <b>⌕</b>
+      Istwa
+    </button>
+
+  </div>
+
+
+  <div id="paymentPanel" class="panel hidden">
+
+    <h3 id="paymentTitle">
+      Depoze lajan
+    </h3>
+
+    <div class="payment-methods">
+
+      <button
+        class="payment-method active"
+        data-payment-method="moncash"
+      >
+        MonCash
+      </button>
+
+      <button
+        class="payment-method"
+        data-payment-method="natcash"
+      >
+        NatCash
+      </button>
+
+    </div>
+
+    <div class="field">
+      <label>Montan</label>
+
+      <input
+        id="paymentAmount"
+        type="number"
+        min="1"
+      >
+    </div>
+
+    <div id="paymentPhoneBox" class="field hidden">
+      <label>Nimewo telefòn</label>
+
+      <input
+        id="paymentPhone"
+        type="tel"
+        placeholder="509..."
+      >
+    </div>
+
+    <button id="paymentBtn" class="btn primary full">
+      Kontinye
+    </button>
+
+    <div id="walletMsg" class="message"></div>
+
   </div>
 
 </section>
 
 
+<!-- EXCHANGE -->
 
-<!-- =========================
-     PLAYER BET
-========================== -->
+<section id="page-exchange" class="page hidden">
 
-<section
-  id="p-bet"
-  class="hidden"
->
+  <div class="page-title">
+    <h1>Echanj</h1>
+    <p>Konvèti yon balans nan yon lòt deviz.</p>
+  </div>
 
-  <h1>
-    Tikè
-  </h1>
+  <div class="panel">
+
+    <div class="exchange-grid">
+
+      <div class="field">
+        <label>Soti</label>
+
+        <select id="exchangeFrom">
+          <option>HTG</option>
+          <option>USD</option>
+          <option>EUR</option>
+          <option>CAD</option>
+          <option>DOP</option>
+        </select>
+      </div>
+
+      <div class="exchange-icon">
+        ⇄
+      </div>
+
+      <div class="field">
+        <label>Pou</label>
+
+        <select id="exchangeTo">
+          <option>USD</option>
+          <option>HTG</option>
+          <option>EUR</option>
+          <option>CAD</option>
+          <option>DOP</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="field">
+      <label>Montan</label>
+
+      <input
+        id="exchangeAmount"
+        type="number"
+        step="0.01"
+      >
+    </div>
+
+    <div id="exchangePreview" class="info-box">
+      Antre yon montan.
+    </div>
+
+    <button id="exchangeBtn" class="btn primary full">
+      Fè echanj
+    </button>
+
+    <div id="exchangeMsg" class="message"></div>
+
+  </div>
+
+</section>
 
 
-  <div class="field">
+<!-- HISTORY -->
 
-    <input
-      id="betEvent"
-      type="number"
-      placeholder="Event ID"
-    >
+<section id="page-history" class="page hidden">
+
+  <div class="page-title">
+    <h1>Istwa</h1>
+    <p>Tout aktivite sou kont ou.</p>
+  </div>
+
+  <div id="historyList" class="history-list"></div>
+
+</section>
+
+
+<!-- PROFILE -->
+
+<section id="page-profile" class="page hidden">
+
+  <div class="page-title">
+    <h1>Profil mwen</h1>
+    <p>Enfòmasyon sou kont MystroParyaj ou.</p>
+  </div>
+
+  <div class="profile-card">
+
+    <div class="avatar">
+      👤
+    </div>
+
+    <div>
+      <strong id="profileName">Itilizatè</strong>
+      <span id="profileRole">Kont Jwè</span>
+    </div>
 
   </div>
 
 
-  <div class="field">
+  <div class="panel">
 
-    <input
-      id="betMarket"
-      type="text"
-      placeholder="home / draw / away"
-    >
+    <div class="profile-line">
+      <span>Email</span>
+      <strong id="profileEmail">-</strong>
+    </div>
+
+    <div class="profile-line">
+      <span>Kalite kont</span>
+      <strong id="profileType">Kont Jwè</strong>
+    </div>
+
+    <div class="profile-line">
+      <span>Estati Ajan</span>
+      <strong id="profileAgentStatus">Pa ajan</strong>
+    </div>
+
+    <div class="profile-line">
+      <span>Kòd Ajan</span>
+      <strong id="profileAgentCode">-</strong>
+    </div>
+
+    <div class="profile-line">
+      <span>Ajan ki lye</span>
+      <strong id="profileLinkedAgent">Pa gen</strong>
+    </div>
 
   </div>
 
 
-  <div class="field">
+  <div id="agentApplication" class="panel hidden">
 
-    <input
-      id="betStake"
-      type="number"
-      min="1"
-      step="1"
-      placeholder="Montan miz"
-    >
+    <h3>Vin yon Ajan</h3>
+
+    <p class="muted">
+      Admin dwe apwouve demann ou an anvan Espas Ajan aktive.
+    </p>
+
+    <div class="field">
+      <label>Non konplè</label>
+      <input id="agentName">
+    </div>
+
+    <div class="field">
+      <label>Telefòn</label>
+      <input id="agentPhone" type="tel">
+    </div>
+
+    <div class="field">
+      <label>Vil / komin</label>
+      <input id="agentCity">
+    </div>
+
+    <div class="field">
+      <label>Adrès</label>
+      <input id="agentAddress">
+    </div>
+
+    <div class="field">
+      <label>CIN</label>
+      <input id="agentCin" type="password">
+    </div>
+
+    <button id="agentApplyBtn" class="btn primary full">
+      Voye demann Ajan
+    </button>
+
+    <div id="agentApplyMsg" class="message"></div>
 
   </div>
 
 
-  <button
-    id="betBtn"
-    type="button"
-    class="btn primary"
-  >
-    Achte tikè
+  <button id="profileLogoutBtn" class="btn danger full">
+    Dekonekte
   </button>
 
-
-  <div
-    id="betMsg"
-    class="msg"
-  ></div>
-
 </section>
 
 
+<!-- AGENT -->
 
-<!-- =========================
-     WALLET
-========================== -->
+<section id="page-agent" class="page hidden">
 
-<section
-  id="p-wallet"
-  class="hidden"
->
-
-  <h1>
-    Bous mwen
-  </h1>
-
-  <div class="admin-box">
-
-    <pre id="wallet">
-      Chajman...
-    </pre>
-
+  <div class="page-title">
+    <h1>Espas Ajan</h1>
+    <p>Jere jwè, fich ak demann peman.</p>
   </div>
 
-</section>
 
+  <div class="panel">
 
+    <h3>Kont Ajan</h3>
 
-<!-- =========================
-     EXCHANGE
-========================== -->
+    <div class="profile-line">
+      <span>Kòd Ajan</span>
+      <strong id="agentCodeDisplay">-</strong>
+    </div>
 
-<section
-  id="p-exchange"
-  class="hidden"
->
-
-  <h1>
-    Echanj lajan
-  </h1>
-
-
-  <div class="field">
-
-    <label>
-      Soti nan
-    </label>
-
-    <select id="from">
-
-      <option value="HTG">
-        HTG
-      </option>
-
-      <option value="USD">
-        USD
-      </option>
-
-      <option value="EUR">
-        EUR
-      </option>
-
-      <option value="CAD">
-        CAD
-      </option>
-
-      <option value="DOP">
-        DOP
-      </option>
-
-    </select>
+    <div class="profile-line">
+      <span>Estati</span>
+      <strong>Apwouve</strong>
+    </div>
 
   </div>
 
 
-  <div class="field">
+  <div class="panel">
 
-    <label>
-      Pou
-    </label>
+    <h3>Jwè ki sou kont mwen</h3>
 
-    <select id="to">
-
-      <option value="USD">
-        USD
-      </option>
-
-      <option value="HTG">
-        HTG
-      </option>
-
-      <option value="EUR">
-        EUR
-      </option>
-
-      <option value="CAD">
-        CAD
-      </option>
-
-      <option value="DOP">
-        DOP
-      </option>
-
-    </select>
+    <div id="agentPlayers"></div>
 
   </div>
 
 
-  <div class="field">
+  <div class="panel">
 
-    <input
-      id="amount"
-      type="number"
-      min="0.01"
-      step="0.01"
-      placeholder="Montan"
-    >
+    <h3>Fè fich pou yon jwè</h3>
 
-  </div>
+    <div class="field">
+      <label>Jwè</label>
+      <select id="agentPlayerSelect"></select>
+    </div>
 
+    <div class="field">
+      <label>ID evènman</label>
+      <input id="agentEventId" type="number">
+    </div>
 
-  <button
-    id="exchangeBtn"
-    type="button"
-    class="btn primary"
-  >
-    Fè echanj
-  </button>
+    <div class="field">
+      <label>Seleksyon</label>
 
+      <select id="agentMarket">
+        <option value="home">1</option>
+        <option value="draw">X</option>
+        <option value="away">2</option>
+      </select>
+    </div>
 
-  <div
-    id="exMsg"
-    class="msg"
-  ></div>
+    <div class="field">
+      <label>Montan miz</label>
+      <input id="agentStake" type="number">
+    </div>
 
-</section>
+    <button id="agentBetBtn" class="btn primary full">
+      Fè fich la
+    </button>
 
-
-
-<!-- =========================
-     AGENT
-========================== -->
-
-<section
-  id="p-agent"
-  class="hidden"
->
-
-  <h1>
-    Espas Ajan
-  </h1>
-
-
-  <h2>
-    Jwè ki sou kont mwen
-  </h2>
-
-  <div
-    id="agentPlayers"
-    class="admin-box"
-  >
-    Chajman...
-  </div>
-
-
-  <h2>
-    Fè fich pou yon jwè
-  </h2>
-
-
-  <div class="field">
-
-    <label>
-      Chwazi jwè
-    </label>
-
-    <select id="agentPlayer">
-    </select>
+    <div id="agentBetMsg" class="message"></div>
 
   </div>
 
 
-  <div class="field">
+  <div class="panel">
 
-    <input
-      id="agentEvent"
-      type="number"
-      placeholder="Event ID"
-    >
+    <h3>Mande peman gagnan</h3>
 
-  </div>
+    <div class="field">
+      <label>ID pari gagnan</label>
+      <input id="agentWinnerBetId" type="number">
+    </div>
 
+    <button id="agentPayoutBtn" class="btn primary full">
+      Voye demann bay Admin
+    </button>
 
-  <div class="field">
-
-    <input
-      id="agentMarket"
-      type="text"
-      placeholder="home / draw / away"
-    >
+    <div id="agentPayoutMsg" class="message"></div>
 
   </div>
 
 
-  <div class="field">
+  <div class="panel">
 
-    <input
-      id="agentStake"
-      type="number"
-      min="1"
-      placeholder="Montan miz"
-    >
+    <h3>Demann peman mwen</h3>
 
-  </div>
+    <div id="agentPayoutList"></div>
 
-
-  <button
-    id="agentBetBtn"
-    type="button"
-    class="btn primary"
-  >
-    Fè fich la
-  </button>
-
-
-  <div
-    id="agentBetMsg"
-    class="msg"
-  ></div>
-
-
-  <h2>
-    Mande peman gagnan
-  </h2>
-
-
-  <p>
-    Ajan an ka voye yon
-    demann bay Admin pou
-    yon pari ki deja
-    konfime kòm gagnan.
-  </p>
-
-
-  <div class="field">
-
-    <input
-      id="payoutBetId"
-      type="number"
-      placeholder="Bet ID gagnan"
-    >
-
-  </div>
-
-
-  <button
-    id="payoutReqBtn"
-    type="button"
-    class="btn primary"
-  >
-    Voye demann bay Admin
-  </button>
-
-
-  <div
-    id="payoutMsg"
-    class="msg"
-  ></div>
-
-
-  <h2>
-    Demann peman mwen
-  </h2>
-
-
-  <div
-    id="agentPayouts"
-    class="admin-box"
-  >
-    Pa gen demann.
   </div>
 
 </section>
 
 
+<!-- ADMIN -->
 
-<!-- =========================
-     ADMIN
-========================== -->
+<section id="page-admin" class="page hidden">
 
-<section
-  id="p-admin"
-  class="hidden"
->
-
-  <h1>
-    Administrasyon
-  </h1>
-
-
-  <div
-    id="stats"
-    class="admin-box"
-  >
-    Chajman...
+  <div class="page-title">
+    <h1>Administrasyon</h1>
+    <p>Jesyon sekirize MystroParyaj.</p>
   </div>
 
-
-  <h2>
-    Demann peman gagnan
-  </h2>
+  <div id="adminStats" class="stats-grid"></div>
 
 
-  <div
-    id="adminPayouts"
-    class="admin-box"
-  >
-    Chajman...
-  </div>
+  <div class="panel">
 
+    <h3>Demann Kont Ajan</h3>
 
-  <h2>
-    Kreye evènman
-  </h2>
-
-
-  <div class="field">
-
-    <label>
-      Espò
-    </label>
-
-    <input
-      id="sport"
-      type="text"
-      value="Football"
-    >
+    <div id="adminAgentRequests"></div>
 
   </div>
 
 
-  <div class="field">
+  <div class="panel">
 
-    <label>
-      Lig
-    </label>
+    <h3>Demann peman gagnan</h3>
 
-    <input
-      id="league"
-      type="text"
-      placeholder="Egzanp: Ligue 1"
-    >
+    <div id="adminPayoutRequests"></div>
 
   </div>
 
 
-  <div class="field">
+  <div class="panel">
 
-    <label>
-      Ekip / Jwè 1
-    </label>
+    <h3>Kreye evènman</h3>
 
-    <input
-      id="home"
-      type="text"
-      placeholder="Home"
-    >
+    <div class="field">
+      <label>Espò</label>
 
-  </div>
+      <select id="adminSport">
+        <option>Football</option>
+        <option>Basketball</option>
+        <option>Baseball</option>
+        <option>Tennis</option>
+        <option>Volleyball</option>
+        <option>Hockey</option>
+        <option>Boxing/MMA</option>
+        <option>Horse racing</option>
+        <option>Esports</option>
+        <option>Lottery</option>
+        <option>Borlette</option>
+        <option>Virtual football</option>
+        <option>Virtual basketball</option>
+        <option>Jackpot</option>
+        <option>Live betting</option>
+      </select>
+    </div>
 
+    <div class="field">
+      <label>Lig</label>
+      <input id="adminLeague">
+    </div>
 
-  <div class="field">
+    <div class="field">
+      <label>Ekip / Jwè 1</label>
+      <input id="adminHome">
+    </div>
 
-    <label>
-      Ekip / Jwè 2
-    </label>
+    <div class="field">
+      <label>Ekip / Jwè 2</label>
+      <input id="adminAway">
+    </div>
 
-    <input
-      id="away"
-      type="text"
-      placeholder="Away"
-    >
+    <div class="field">
+      <label>Dat ak lè</label>
+      <input id="adminStart" type="datetime-local">
+    </div>
 
-  </div>
+    <div class="odds-grid">
 
+      <div class="field">
+        <label>1</label>
+        <input id="adminOddHome" type="number" step="0.01" value="2">
+      </div>
 
-  <div class="field">
+      <div class="field">
+        <label>X</label>
+        <input id="adminOddDraw" type="number" step="0.01" value="3">
+      </div>
 
-    <label>
-      Dat ak lè
-    </label>
+      <div class="field">
+        <label>2</label>
+        <input id="adminOddAway" type="number" step="0.01" value="2">
+      </div>
 
-    <input
-      id="start"
-      type="datetime-local"
-    >
+    </div>
 
-  </div>
+    <button id="adminCreateEventBtn" class="btn primary full">
+      Kreye evènman
+    </button>
 
-
-  <div class="field">
-
-    <label>
-      Kòt Home
-    </label>
-
-    <input
-      id="oh"
-      type="number"
-      step="0.01"
-      value="2"
-    >
-
-  </div>
-
-
-  <div class="field">
-
-    <label>
-      Kòt Draw
-    </label>
-
-    <input
-      id="od"
-      type="number"
-      step="0.01"
-      value="3"
-    >
+    <div id="adminEventMsg" class="message"></div>
 
   </div>
 
 
-  <div class="field">
+  <div class="panel">
 
-    <label>
-      Kòt Away
-    </label>
+    <h3>Valide rezilta</h3>
 
-    <input
-      id="oa"
-      type="number"
-      step="0.01"
-      value="2"
-    >
+    <div class="field">
+      <label>ID evènman</label>
+      <input id="settleEventId" type="number">
+    </div>
+
+    <div class="field">
+      <label>Rezilta</label>
+
+      <select id="settleWinner">
+        <option value="home">1 — Ekip 1</option>
+        <option value="draw">X — Match nul</option>
+        <option value="away">2 — Ekip 2</option>
+      </select>
+    </div>
+
+    <button id="settleBtn" class="btn primary full">
+      Valide rezilta
+    </button>
+
+    <div id="settleMsg" class="message"></div>
 
   </div>
-
-
-  <button
-    id="eventBtn"
-    type="button"
-    class="btn primary"
-  >
-    Kreye evènman
-  </button>
-
-
-  <div
-    id="adminMsg"
-    class="msg"
-  ></div>
 
 </section>
-
 
 </main>
 
 
+<nav class="bottom-nav">
 
-<!-- =========================
-     LOGIN MODAL
-========================== -->
+  <button data-open="home" class="active">
+    <b>🏠</b>
+    Akèy
+  </button>
 
-<div
-  id="auth"
-  class="overlay"
->
+  <button data-open="sports">
+    <b>⚽</b>
+    Espò
+  </button>
 
-  <div
-    class="modal"
-    id="authCard"
-  >
+  <button data-open="bet">
+    <b>🎟</b>
+    Tikè
+  </button>
 
-    <h2>
-      Konekte
-    </h2>
+  <button data-open="wallet">
+    <b>💰</b>
+    Bous
+  </button>
 
+  <button data-open="profile">
+    <b>👤</b>
+    Profil
+  </button>
+
+</nav>
+
+
+<!-- LOGIN -->
+
+<div id="authModal" class="overlay">
+
+  <div class="modal">
+
+    <div class="modal-logo">
+      MP
+    </div>
+
+    <h2>Konekte</h2>
 
     <p>
-      Konekte sou kont
-      MystroParyaj ou.
+      Konekte sou kont MystroParyaj ou.
     </p>
 
-
     <div class="field">
-
-      <input
-        id="email"
-        type="email"
-        autocomplete="email"
-        placeholder="Email"
-      >
-
+      <label>Email</label>
+      <input id="loginEmail" type="email" autocomplete="email">
     </div>
 
-
     <div class="field">
-
-      <input
-        id="pass"
-        type="password"
-        autocomplete="current-password"
-        placeholder="Modpas"
-      >
-
+      <label>Modpas</label>
+      <input id="loginPassword" type="password">
     </div>
 
-
-    <button
-      id="login"
-      type="button"
-      class="btn primary"
-    >
+    <button id="loginBtn" class="btn primary full">
       Konekte
     </button>
 
-
-    <button
-      id="register"
-      type="button"
-      class="btn secondary"
-    >
-      Kreye kont
+    <button id="registerBtn" class="btn light full">
+      Kreye Kont Jwè
     </button>
 
-
-    <div
-      id="authMsg"
-      class="msg"
-    ></div>
+    <div id="authMsg" class="message"></div>
 
   </div>
 
 </div>
 
 
+<!-- ADMIN CIN -->
 
-<!-- =========================
-     ADMIN CIN MODAL
-========================== -->
+<div id="cinModal" class="overlay hidden">
 
-<div
-  id="cinModal"
-  class="overlay hidden"
->
+  <div class="modal">
 
-  <div
-    class="modal"
-    id="cinCard"
-  >
+    <div class="security-logo">
+      🔐
+    </div>
 
     <h2 id="cinTitle">
       Konfime CIN Admin
     </h2>
 
-
-    <p id="cinText">
-      Antre CIN ou pou
-      konfime se ou menm.
+    <p id="cinInfo">
+      Antre CIN ou pou konfime se ou menm.
     </p>
 
-
-    <div
-      id="nameWrap"
-      class="field hidden"
-    >
-
-      <input
-        id="fullName"
-        type="text"
-        autocomplete="name"
-        placeholder="Non konplè"
-      >
-
+    <div id="adminNameBox" class="field hidden">
+      <label>Non konplè</label>
+      <input id="adminFullName">
     </div>
-
 
     <div class="field">
-
-      <input
-        id="cin"
-        type="password"
-        autocomplete="off"
-        placeholder="CIN"
-      >
-
+      <label>CIN</label>
+      <input id="adminCin" type="password">
     </div>
 
-
-    <button
-      id="cinBtn"
-      type="button"
-      class="btn primary"
-    >
+    <button id="verifyCinBtn" class="btn primary full">
       Konfime
     </button>
 
-
-    <div
-      id="cinMsg"
-      class="msg"
-    ></div>
+    <div id="cinMsg" class="message"></div>
 
   </div>
 
 </div>
 
 
-
-<!-- =========================
-     FIREBASE + APP
-========================== -->
-
 <script
   type="module"
-  src="firebase-config.js?v=4"
+  src="firebase-config.js?v=30"
 ></script>
 
 <script
   type="module"
-  src="script.js?v=4"
+  src="script.js?v=30"
 ></script>
-
 
 </body>
-  </html>
+        </html>
