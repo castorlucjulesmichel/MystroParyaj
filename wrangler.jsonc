@@ -1,5 +1,12 @@
 {
   "name": "mystroparyaj-api",
   "main": "worker.js",
-  "compatibility_date": "2026-09-07"
+  "compatibility_date": "2026-09-08",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mystroparyaj-db",
+      "database_id": "03b149bb-3f09-4d10-82ee-6d89fbc56919"
     }
+  ]
+}
