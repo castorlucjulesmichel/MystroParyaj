@@ -1,0 +1,16 @@
+MystroParyaj MonCash LIVE configuration
+
+Keep credentials only in Cloudflare Worker Secrets. Never commit them to GitHub.
+
+Required secret names:
+MONCASH_MODE=live
+MONCASH_CLIENT_ID=<MonCash Business LIVE client id>
+MONCASH_CLIENT_SECRET=<MonCash Business LIVE client secret>
+
+Return URL:
+https://mystroparyaj-api.castormystro.workers.dev/api/moncash/return
+
+Website / Alert URL:
+https://castorlucjulesmichel.github.io/MystroParyaj/
+
+Do not enable real-money crediting until MonCash LIVE credentials and merchant authorization are confirmed.
