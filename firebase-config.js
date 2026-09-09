@@ -36,7 +36,11 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 
-export async function registerWithEmail(
+/* =========================
+   REGISTER
+========================= */
+
+async function register(
   email,
   password,
   requestedAccountType = "player"
@@ -49,12 +53,18 @@ export async function registerWithEmail(
       password
     );
 
-  const user = credential.user;
+  const user =
+    credential.user;
 
   await setDoc(
-    doc(db, "users", user.uid),
+    doc(
+      db,
+      "users",
+      user.uid
+    ),
     {
-      uid: user.uid,
+      uid:
+        user.uid,
 
       email:
         user.email || "",
@@ -84,7 +94,11 @@ export async function registerWithEmail(
 }
 
 
-export async function loginWithEmail(
+/* =========================
+   LOGIN
+========================= */
+
+async function login(
   email,
   password
 ) {
@@ -100,16 +114,38 @@ export async function loginWithEmail(
 }
 
 
-export async function resetPassword(email) {
+/* =========================
+   RESET PASSWORD
+========================= */
 
-  await sendPasswordResetEmail(
+async function resetPassword(
+  email
+) {
+
+  return sendPasswordResetEmail(
     auth,
     email
   );
 }
 
 
-export function watchAuth(callback) {
+/* =========================
+   LOGOUT
+========================= */
+
+async function logout() {
+
+  return signOut(auth);
+}
+
+
+/* =========================
+   AUTH LISTENER
+========================= */
+
+function watch(
+  callback
+) {
 
   return onAuthStateChanged(
     auth,
@@ -118,14 +154,39 @@ export function watchAuth(callback) {
 }
 
 
-export function logoutUser() {
+/* =========================
+   GLOBAL ADAPTER
+   USED BY script.js
+========================= */
 
-  return signOut(auth);
-}
+window.MPAuth = {
 
+  login,
+
+  register,
+
+  resetPassword,
+
+  logout,
+
+  onAuthStateChanged:
+    watch,
+
+  auth
+};
+
+
+/* =========================
+   EXPORTS
+========================= */
 
 export {
   app,
   auth,
-  db
+  db,
+  login,
+  register,
+  resetPassword,
+  logout,
+  watch
 };
