@@ -10,29 +10,10 @@
   function text(){const t=labels[language()]||labels.ht;if($("ticketRuleText"))$("ticketRuleText").textContent=t.rule;if($("potentialGainLabel"))$("potentialGainLabel").textContent=t.gain;if($("potentialGainNote"))$("potentialGainNote").textContent=t.note;}
   function odds(){const s=$("selectedOdds")?.textContent||"";const m=s.match(/([0-9]+(?:[.,][0-9]+)?)/);return m?Number(m[1].replace(",",".")):0;}
   function gain(){const stake=Number($("betStake")?.value||0),o=odds(),c=$("ticketCurrency")?.textContent||"HTG",v=stake>0&&o>0?stake*o:0;if($("potentialGain"))$("potentialGain").textContent=`${v.toLocaleString(undefined,{maximumFractionDigits:2})} ${c}`;}
-  function addWalletLayout(){
-    const panel=$("paymentPanel");if(!panel||panel.dataset.layoutReady)return;panel.dataset.layoutReady="1";
-    const extra=document.createElement("div");extra.id="requestExtraFields";extra.innerHTML=`
-      <div class="field"><label>Deviz</label><select><option>HTG</option><option>USD</option><option>EUR</option><option>CAD</option><option>DOP</option></select></div>
-      <div class="field"><label>Referans</label><input type="text" autocomplete="off"></div>
-      <div class="field"><label>Foto / dokiman</label><input type="file" accept="image/*"></div>`;
-    const btn=$("paymentBtn");if(btn)panel.insertBefore(extra,btn);
-  }
-  function addAdminLayout(){
-    const page=$("page-admin");if(!page||$("requestAdminUi"))return;
-    const box=document.createElement("div");box.id="requestAdminUi";box.className="panel";box.innerHTML=`
-      <div class="page-title"><h2>Validasyon operasyon</h2><p>Revize demann ki soumèt nan aplikasyon an.</p></div>
-      <div class="field"><label>Filtre</label><select><option>Tout</option><option>Depo</option><option>Retrè</option></select></div>
-      <div class="empty">Pa gen demann an atant.</div>
-      <hr style="margin:24px 0;border:0;border-top:1px solid #e5e7eb">
-      <h3>Depo / Retrè admin</h3>
-      <div class="field"><label>Itilizatè</label><input type="text" placeholder="Email / UID"></div>
-      <div class="field"><label>Kalite</label><select><option>Depo</option><option>Retrè</option></select></div>
-      <div class="field"><label>Montan</label><input type="number" min="1"></div>
-      <div class="field"><label>Deviz</label><select><option>HTG</option><option>USD</option><option>EUR</option><option>CAD</option><option>DOP</option></select></div>
-      <div class="field"><label>Referans</label><input type="text"></div>`;
-    page.appendChild(box);
-  }
+  function card(method){const n=method==="natcash"?"NatCash":"MonCash";const i=method==="natcash"?"N":"M";return `<div id="providerCard" style="margin:16px 0;padding:18px;border:1px solid #dfe6ef;border-radius:20px;background:linear-gradient(180deg,#fff,#f8fbff)"><div style="display:flex;gap:14px;align-items:center"><div style="width:58px;height:58px;border-radius:16px;border:1px solid #e4e9f0;display:flex;align-items:center;justify-content:center;background:#fff;font-weight:900;font-size:22px">${i}</div><div><strong style="display:block;font-size:20px">${n}</strong><span style="color:#6b7280;font-size:14px">Sèvis manyèl</span></div></div><div style="height:1px;background:#e5e7eb;margin:16px 0"></div><p style="margin:0;color:#657083;line-height:1.5">Ranpli enfòmasyon yo epi soumèt demann lan pou administrasyon an revize li.</p></div>`;}
+  function syncCard(){const old=$("providerCard");if(!old)return;const active=document.querySelector(".payment-method.active");const wrap=document.createElement("div");wrap.innerHTML=card(active?.dataset.paymentMethod||"moncash");old.replaceWith(wrap.firstElementChild);}
+  function addWalletLayout(){const panel=$("paymentPanel");if(!panel||panel.dataset.layoutReady)return;panel.dataset.layoutReady="1";const methods=panel.querySelector(".payment-methods");if(methods){const h=document.createElement("div");h.innerHTML=card("moncash");methods.insertAdjacentElement("afterend",h.firstElementChild);}const extra=document.createElement("div");extra.id="requestExtraFields";extra.innerHTML=`<div class="field"><label>Deviz</label><select><option>HTG</option><option>USD</option><option>EUR</option><option>CAD</option><option>DOP</option></select></div><div class="field"><label>Referans</label><input type="text" autocomplete="off"></div><div class="field"><label>Foto / dokiman</label><input type="file" accept="image/*"></div>`;const btn=$("paymentBtn");if(btn){panel.insertBefore(extra,btn);btn.textContent="Soumèt";}panel.querySelectorAll(".payment-method").forEach(b=>b.addEventListener("click",()=>setTimeout(syncCard,0)));}
+  function addAdminLayout(){const page=$("page-admin");if(!page||$("requestAdminUi"))return;const box=document.createElement("div");box.id="requestAdminUi";box.className="panel";box.innerHTML=`<div class="page-title"><h2>Validasyon operasyon</h2><p>Revize demann ki soumèt nan aplikasyon an.</p></div><div class="field"><label>Filtre</label><select><option>Tout</option><option>Depo</option><option>Retrè</option></select></div><div class="empty">Pa gen demann an atant.</div><hr style="margin:24px 0;border:0;border-top:1px solid #e5e7eb"><h3>Depo / Retrè admin</h3><div class="field"><label>Itilizatè</label><input type="text" placeholder="Email / UID"></div><div class="field"><label>Kalite</label><select><option>Depo</option><option>Retrè</option></select></div><div class="field"><label>Montan</label><input type="number" min="1"></div><div class="field"><label>Deviz</label><select><option>HTG</option><option>USD</option><option>EUR</option><option>CAD</option><option>DOP</option></select></div><div class="field"><label>Metòd</label><select><option>NatCash</option><option>MonCash</option></select></div><div class="field"><label>Referans</label><input type="text"></div>`;page.appendChild(box);}
   function refresh(){text();gain();addWalletLayout();addAdminLayout();}
   document.addEventListener("DOMContentLoaded",()=>{refresh();$("betStake")?.addEventListener("input",gain);$("betMarket")?.addEventListener("change",()=>setTimeout(gain,0));$("betEventId")?.addEventListener("change",()=>setTimeout(gain,0));$("language")?.addEventListener("change",()=>setTimeout(refresh,0));$("currency")?.addEventListener("change",()=>setTimeout(gain,0));const oddsBox=$("selectedOdds");if(oddsBox)new MutationObserver(gain).observe(oddsBox,{childList:true,characterData:true,subtree:true});});
 })();
