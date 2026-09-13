@@ -43,29 +43,8 @@
   function gain(){const stake=Number($("betStake")?.value||0),o=odds(),c=$("ticketCurrency")?.textContent||"HTG",v=stake>0&&o>0?stake*o:0;if($("potentialGain"))$("potentialGain").textContent=`${v.toLocaleString(undefined,{maximumFractionDigits:2})} ${c}`;}
   function refresh(){text();gain();}
 
-  function installTestNotice(){
-    const panel=$("paymentPanel");
-    if(!panel||$("paymentTestNotice"))return;
-    const notice=document.createElement("div");
-    notice.id="paymentTestNotice";
-    notice.style.cssText="margin:12px 0;padding:12px;border:1px solid #d97706;border-radius:12px;background:#fff7ed;color:#7c2d12";
-    notice.innerHTML="<strong>MODE TÈS</strong><div style='font-size:13px;margin-top:4px'>Depo ak retrè sou paj sa a pa dwe itilize pou voye oswa resevwa lajan reyèl.</div>";
-    panel.insertBefore(notice,panel.firstChild);
-    const btn=$("paymentBtn");
-    if(btn){
-      btn.textContent="Teste fòm nan";
-      btn.addEventListener("click",e=>{
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        const msg=$("walletMsg");
-        if(msg)msg.textContent="Mòd tès sèlman: okenn lajan reyèl pa transfere.";
-      },true);
-    }
-  }
-
   document.addEventListener("DOMContentLoaded",()=>{
     refresh();
-    installTestNotice();
     $("betStake")?.addEventListener("input",gain);
     $("betMarket")?.addEventListener("change",()=>setTimeout(gain,0));
     $("betEventId")?.addEventListener("change",()=>setTimeout(gain,0));
